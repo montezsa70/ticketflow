@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar, Clock, MapPin, Upload, Users, Ticket } from "lucide-react";
 import { toast } from "sonner";
+import { useEvents } from "@/contexts/EventContext";
 
 interface TicketType {
   name: string;
@@ -18,6 +19,7 @@ interface TicketType {
 }
 
 export function CreateEventForm() {
+  const { addEvent } = useEvents();
   const [eventData, setEventData] = useState({
     name: "",
     startDate: "",
@@ -41,6 +43,26 @@ export function CreateEventForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Create the event object
+    const newEvent = {
+      name: eventData.name,
+      startDate: eventData.startDate,
+      startTime: eventData.startTime,
+      location: eventData.location,
+      description: eventData.description,
+      capacity: eventData.capacity,
+      ticketTypes: ticketTypes.map(ticket => ({
+        name: ticket.name,
+        price: ticket.price,
+        quantity: ticket.quantity
+      }))
+    };
+
+    // Add the event to the context
+    addEvent(newEvent);
+    
+    // Show success message
     toast.success("Event created successfully!");
   };
 
