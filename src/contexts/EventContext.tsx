@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 interface Event {
   name: string;
@@ -7,6 +7,7 @@ interface Event {
   location: string;
   description: string;
   capacity: string;
+  category: string;
   ticketTypes: Array<{
     name: string;
     price: string;
@@ -22,7 +23,16 @@ interface EventContextType {
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
 export function EventProvider({ children }: { children: ReactNode }) {
-  const [events, setEvents] = useState<Event[]>([]);
+  // Initialize state from localStorage if available
+  const [events, setEvents] = useState<Event[]>(() => {
+    const savedEvents = localStorage.getItem('events');
+    return savedEvents ? JSON.parse(savedEvents) : [];
+  });
+
+  // Save to localStorage whenever events change
+  useEffect(() => {
+    localStorage.setItem('events', JSON.stringify(events));
+  }, [events]);
 
   const addEvent = (event: Event) => {
     setEvents((prevEvents) => [...prevEvents, event]);

@@ -3,9 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, MapPin, Upload, Users, Ticket } from "lucide-react";
+import { Calendar, Clock, MapPin, Upload, Users, Ticket, Music, Briefcase, Palette, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import { useEvents } from "@/contexts/EventContext";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface TicketType {
   name: string;
@@ -29,6 +36,7 @@ export function CreateEventForm() {
     location: "",
     description: "",
     capacity: "",
+    category: "", // New field
   });
 
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([
@@ -41,9 +49,21 @@ export function CreateEventForm() {
     },
   ]);
 
+  const categories = [
+    { name: "Music", icon: Music },
+    { name: "Sports", icon: Trophy },
+    { name: "Arts", icon: Palette },
+    { name: "Business", icon: Briefcase }
+  ];
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!eventData.category) {
+      toast.error("Please select an event category");
+      return;
+    }
+
     // Create the event object
     const newEvent = {
       name: eventData.name,
@@ -52,6 +72,7 @@ export function CreateEventForm() {
       location: eventData.location,
       description: eventData.description,
       capacity: eventData.capacity,
+      category: eventData.category,
       ticketTypes: ticketTypes.map(ticket => ({
         name: ticket.name,
         price: ticket.price,
@@ -69,6 +90,10 @@ export function CreateEventForm() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setEventData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setEventData(prev => ({ ...prev, category: value }));
   };
 
   const handleTicketChange = (index: number, field: keyof TicketType, value: string) => {
@@ -109,6 +134,22 @@ export function CreateEventForm() {
             value={eventData.name}
             onChange={handleChange}
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="category">Event Category</Label>
+          <Select value={eventData.category} onValueChange={handleCategoryChange}>
+            <SelectTrigger className="input-glass">
+              <SelectValue placeholder="Select a category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map(({ name }) => (
+                <SelectItem key={name} value={name.toLowerCase()}>
+                  {name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

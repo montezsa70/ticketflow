@@ -20,8 +20,7 @@ const EventPortal = () => {
 
   const filteredEvents = events.filter(event => {
     if (!selectedCategory) return true;
-    // This is a simple filter - you might want to add a category field to your events
-    return event.name.toLowerCase().includes(selectedCategory.toLowerCase());
+    return event.category.toLowerCase() === selectedCategory.toLowerCase();
   });
 
   return (
