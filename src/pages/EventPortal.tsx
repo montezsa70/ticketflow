@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Search, MapPin, Calendar, Star, Filter, Ticket, Music, Briefcase, Palette, Trophy } from "lucide-react";
 import { useEvents } from "@/contexts/EventContext";
+import { EventCard } from "@/components/dashboard/EventCard";
 
 const EventPortal = () => {
   const [searchTerm, setSearchTerm] = useState("");

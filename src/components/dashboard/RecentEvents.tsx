@@ -19,7 +19,7 @@ export function RecentEvents({ events }: RecentEventsProps) {
             <p className="text-white/60 text-center py-8">No events created yet</p>
           ) : (
             events.map((event, index) => (
-              <EventCard key={index} event={event} />
+              <EventCard key={index} event={event} index={index} />
             ))
           )}
         </div>
