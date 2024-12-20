@@ -25,7 +25,6 @@ const EventPortal = () => {
 
   return (
     <div className="min-h-screen bg-background p-6">
-      {/* Header */}
       <header className="container mx-auto mb-8">
         <div className="flex items-center justify-between">
           <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-purple-gradient">
@@ -87,31 +86,7 @@ const EventPortal = () => {
         <h2 className="text-2xl font-semibold mb-6">Featured Events</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredEvents.map((event, index) => (
-            <Card key={index} className="glass-panel hover:scale-105 transition-transform duration-300">
-              <CardHeader>
-                <CardTitle className="flex justify-between items-start">
-                  <span>{event.name}</span>
-                  <Star className="text-yellow-500" size={20} />
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar size={16} />
-                    <span>{event.startDate} at {event.startTime}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin size={16} />
-                    <span>{event.location}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Ticket size={16} />
-                    <span>From ${event.ticketTypes[0]?.price || "N/A"}</span>
-                  </div>
-                  <Button className="w-full">View Details</Button>
-                </div>
-              </CardContent>
-            </Card>
+            <EventCard key={index} event={event} index={index} />
           ))}
         </div>
       </section>
