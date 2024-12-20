@@ -51,3 +51,11 @@
 .bg-purple-gradient {
   @apply bg-gradient-to-r from-purple-500 to-blue-500;
 }
+
+.hover-scale {
+  @apply transition-transform duration-300 hover:scale-105;
+}
+
+.fade-in {
+  @apply animate-fade-in;
+}
