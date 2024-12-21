@@ -12,6 +12,9 @@ interface Event {
     name: string;
     price: string;
     quantity: string;
+    serviceFee: string;
+    perks?: string;
+    customFields?: string[];
   }>;
 }
 
