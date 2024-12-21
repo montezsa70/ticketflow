@@ -7,6 +7,8 @@ import { Calendar, MapPin, Upload, Users, Music, Briefcase, Palette, Trophy } fr
 import { toast } from "sonner";
 import { useEvents } from "@/contexts/EventContext";
 import { TicketTypeForm } from "./ticket/TicketTypeForm";
+import { createTicketsForEvent } from "@/services/ticketService";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
   SelectContent,
@@ -59,7 +61,7 @@ export function CreateEventForm() {
     { name: "Business", icon: Briefcase }
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!eventData.category) {
@@ -67,17 +69,48 @@ export function CreateEventForm() {
       return;
     }
 
-    const newEvent = {
-      ...eventData,
-      ticketTypes: ticketTypes.map(ticket => ({
-        ...ticket,
-        price: ticket.price,
-        serviceFee: ticket.serviceFee,
-      }))
-    };
+    try {
+      // First, create the event in Supabase
+      const { data: eventResult, error: eventError } = await supabase
+        .from('events')
+        .insert({
+          name: eventData.name,
+          start_date: eventData.startDate,
+          start_time: eventData.startTime,
+          end_date: eventData.endDate,
+          end_time: eventData.endTime,
+          location: eventData.location,
+          description: eventData.description,
+          capacity: parseInt(eventData.capacity),
+          category: eventData.category,
+        })
+        .select()
+        .single();
 
-    addEvent(newEvent);
-    toast.success("Event created successfully!");
+      if (eventError) {
+        toast.error("Failed to create event");
+        console.error(eventError);
+        return;
+      }
+
+      // Then create tickets for the event
+      const success = await createTicketsForEvent(eventResult.id, ticketTypes);
+
+      if (success) {
+        addEvent({
+          ...eventData,
+          ticketTypes: ticketTypes.map(ticket => ({
+            ...ticket,
+            price: ticket.price,
+            serviceFee: ticket.serviceFee,
+          }))
+        });
+        toast.success("Event and tickets created successfully!");
+      }
+    } catch (error) {
+      console.error('Error in handleSubmit:', error);
+      toast.error("Failed to create event and tickets");
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
