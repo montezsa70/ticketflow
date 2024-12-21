@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, MapPin, Upload, Users, Ticket, Music, Briefcase, Palette, Trophy } from "lucide-react";
+import { Calendar, MapPin, Upload, Users, Music, Briefcase, Palette, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import { useEvents } from "@/contexts/EventContext";
+import { TicketTypeForm } from "./ticket/TicketTypeForm";
 import {
   Select,
   SelectContent,
@@ -19,6 +20,7 @@ interface TicketType {
   price: string;
   quantity: string;
   perks: string;
+  serviceFee: string;
   earlyBirdPrice?: string;
   earlyBirdEndDate?: string;
   maxPerUser?: string;
@@ -36,7 +38,7 @@ export function CreateEventForm() {
     location: "",
     description: "",
     capacity: "",
-    category: "", // New field
+    category: "",
   });
 
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([
@@ -45,6 +47,7 @@ export function CreateEventForm() {
       price: "",
       quantity: "",
       perks: "",
+      serviceFee: "",
       customFields: [],
     },
   ]);
@@ -64,26 +67,16 @@ export function CreateEventForm() {
       return;
     }
 
-    // Create the event object
     const newEvent = {
-      name: eventData.name,
-      startDate: eventData.startDate,
-      startTime: eventData.startTime,
-      location: eventData.location,
-      description: eventData.description,
-      capacity: eventData.capacity,
-      category: eventData.category,
+      ...eventData,
       ticketTypes: ticketTypes.map(ticket => ({
-        name: ticket.name,
+        ...ticket,
         price: ticket.price,
-        quantity: ticket.quantity
+        serviceFee: ticket.serviceFee,
       }))
     };
 
-    // Add the event to the context
     addEvent(newEvent);
-    
-    // Show success message
     toast.success("Event created successfully!");
   };
 
@@ -98,7 +91,17 @@ export function CreateEventForm() {
 
   const handleTicketChange = (index: number, field: keyof TicketType, value: string) => {
     const newTicketTypes = [...ticketTypes];
-    newTicketTypes[index] = { ...newTicketTypes[index], [field]: value };
+    if (field === "customFields") {
+      newTicketTypes[index] = { 
+        ...newTicketTypes[index], 
+        customFields: JSON.parse(value) 
+      };
+    } else {
+      newTicketTypes[index] = { 
+        ...newTicketTypes[index], 
+        [field]: value 
+      };
+    }
     setTicketTypes(newTicketTypes);
   };
 
@@ -110,6 +113,7 @@ export function CreateEventForm() {
         price: "",
         quantity: "",
         perks: "",
+        serviceFee: "",
         customFields: [],
       },
     ]);
@@ -144,7 +148,7 @@ export function CreateEventForm() {
             </SelectTrigger>
             <SelectContent>
               {categories.map(({ name }) => (
-                <SelectItem key={name} value={name.toLowerCase()}>
+                <SelectItem key={name} value={name}>
                   {name}
                 </SelectItem>
               ))}
@@ -255,120 +259,19 @@ export function CreateEventForm() {
           </div>
         </div>
 
-        {/* Ticket Management Section */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
             Ticket Management
           </h3>
           
           {ticketTypes.map((ticket, index) => (
-            <div key={index} className="glass-panel p-4 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Ticket Type Name</Label>
-                  <div className="relative">
-                    <Ticket className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="e.g., VIP, General Admission"
-                      className="input-glass pl-10"
-                      value={ticket.name}
-                      onChange={(e) => handleTicketChange(index, "name", e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Price</Label>
-                  <Input
-                    type="number"
-                    placeholder="Enter price"
-                    className="input-glass"
-                    value={ticket.price}
-                    onChange={(e) => handleTicketChange(index, "price", e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Quantity Available</Label>
-                  <Input
-                    type="number"
-                    placeholder="Enter quantity"
-                    className="input-glass"
-                    value={ticket.quantity}
-                    onChange={(e) => handleTicketChange(index, "quantity", e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Max Tickets Per User</Label>
-                  <Input
-                    type="number"
-                    placeholder="Enter limit"
-                    className="input-glass"
-                    value={ticket.maxPerUser}
-                    onChange={(e) => handleTicketChange(index, "maxPerUser", e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Early Bird Price</Label>
-                  <Input
-                    type="number"
-                    placeholder="Enter early bird price"
-                    className="input-glass"
-                    value={ticket.earlyBirdPrice}
-                    onChange={(e) => handleTicketChange(index, "earlyBirdPrice", e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Early Bird End Date</Label>
-                  <Input
-                    type="date"
-                    className="input-glass"
-                    value={ticket.earlyBirdEndDate}
-                    onChange={(e) => handleTicketChange(index, "earlyBirdEndDate", e.target.value)}
-                  />
-                </div>
-
-                <div className="col-span-2 space-y-2">
-                  <Label>Ticket Perks</Label>
-                  <Textarea
-                    placeholder="Enter perks (e.g., reserved seating, merchandise)"
-                    className="input-glass"
-                    value={ticket.perks}
-                    onChange={(e) => handleTicketChange(index, "perks", e.target.value)}
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full border-white/10 hover:bg-white/5"
-                    onClick={() => addCustomField(index)}
-                  >
-                    Add Custom Field
-                  </Button>
-                </div>
-
-                {ticket.customFields.map((_, fieldIndex) => (
-                  <div key={fieldIndex} className="col-span-2 space-y-2">
-                    <Label>Custom Field {fieldIndex + 1}</Label>
-                    <Input
-                      placeholder="e.g., Dietary Requirements"
-                      className="input-glass"
-                      value={ticket.customFields[fieldIndex]}
-                      onChange={(e) => {
-                        const newTicketTypes = [...ticketTypes];
-                        newTicketTypes[index].customFields[fieldIndex] = e.target.value;
-                        setTicketTypes(newTicketTypes);
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
+            <TicketTypeForm
+              key={index}
+              ticket={ticket}
+              index={index}
+              onTicketChange={handleTicketChange}
+              onAddCustomField={addCustomField}
+            />
           ))}
 
           <Button

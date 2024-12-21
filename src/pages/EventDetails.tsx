@@ -68,7 +68,7 @@ export default function EventDetails() {
                     <p className="text-sm text-white/60">{ticket.quantity} available</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-semibold">${ticket.price}</p>
+                    <p className="text-lg font-semibold">R{ticket.price}</p>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button variant="secondary" size="sm">Purchase</Button>
@@ -82,16 +82,16 @@ export default function EventDetails() {
                             <h3 className="font-medium mb-2">{ticket.name}</h3>
                             <div className="flex justify-between text-sm">
                               <span>Price per ticket</span>
-                              <span>${ticket.price}</span>
+                              <span>R{ticket.price}</span>
                             </div>
                             <div className="flex justify-between text-sm mt-2">
                               <span>Service fee</span>
-                              <span>${(parseFloat(ticket.price) * 0.1).toFixed(2)}</span>
+                              <span>R{ticket.serviceFee}</span>
                             </div>
                             <div className="border-t border-white/10 mt-4 pt-4">
                               <div className="flex justify-between font-semibold">
                                 <span>Total</span>
-                                <span>${(parseFloat(ticket.price) * 1.1).toFixed(2)}</span>
+                                <span>R{(parseFloat(ticket.price) + parseFloat(ticket.serviceFee || "0")).toFixed(2)}</span>
                               </div>
                             </div>
                           </div>

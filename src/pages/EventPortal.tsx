@@ -21,7 +21,7 @@ const EventPortal = () => {
 
   const filteredEvents = events.filter(event => {
     const matchesCategory = !selectedCategory || 
-      event.category.toLowerCase() === selectedCategory.toLowerCase();
+      event.category === selectedCategory;
     return matchesCategory;
   });
 
