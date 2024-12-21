@@ -20,8 +20,9 @@ const EventPortal = () => {
   ];
 
   const filteredEvents = events.filter(event => {
-    if (!selectedCategory) return true;
-    return event.category.toLowerCase() === selectedCategory.toLowerCase();
+    const matchesCategory = !selectedCategory || 
+      event.category.toLowerCase() === selectedCategory.toLowerCase();
+    return matchesCategory;
   });
 
   return (
@@ -86,9 +87,13 @@ const EventPortal = () => {
       <section className="container mx-auto mb-12">
         <h2 className="text-2xl font-semibold mb-6">Featured Events</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents.map((event, index) => (
-            <EventCard key={index} event={event} index={index} />
-          ))}
+          {filteredEvents.length === 0 ? (
+            <p className="text-white/60 col-span-full text-center py-8">No events found in this category</p>
+          ) : (
+            filteredEvents.map((event, index) => (
+              <EventCard key={index} event={event} index={index} />
+            ))
+          )}
         </div>
       </section>
 
