@@ -9,7 +9,104 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      events: {
+        Row: {
+          capacity: number | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          end_time: string | null
+          id: string
+          location: string | null
+          name: string
+          start_date: string
+          start_time: string
+          updated_at: string | null
+        }
+        Insert: {
+          capacity?: number | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          end_time?: string | null
+          id?: string
+          location?: string | null
+          name: string
+          start_date: string
+          start_time: string
+          updated_at?: string | null
+        }
+        Update: {
+          capacity?: number | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          end_time?: string | null
+          id?: string
+          location?: string | null
+          name?: string
+          start_date?: string
+          start_time?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      tickets: {
+        Row: {
+          created_at: string | null
+          customer_email: string | null
+          event_id: string | null
+          id: string
+          price: number
+          purchase_date: string | null
+          scanned_at: string | null
+          service_fee: number
+          status: string
+          ticket_type: string
+          unique_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_email?: string | null
+          event_id?: string | null
+          id?: string
+          price: number
+          purchase_date?: string | null
+          scanned_at?: string | null
+          service_fee: number
+          status?: string
+          ticket_type: string
+          unique_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_email?: string | null
+          event_id?: string | null
+          id?: string
+          price?: number
+          purchase_date?: string | null
+          scanned_at?: string | null
+          service_fee?: number
+          status?: string
+          ticket_type?: string
+          unique_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
