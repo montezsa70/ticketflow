@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import { generateUniqueTicketId } from "@/utils/ticketUtils";
-import { toast } from "sonner";
 
 export const createTicketsForEvent = async (
   eventId: string,
@@ -14,10 +13,10 @@ export const createTicketsForEvent = async (
   try {
     const tickets = ticketTypes.flatMap((ticketType) => {
       const quantity = parseInt(ticketType.quantity);
-      return Array.from({ length: quantity }, (_, index) => ({
+      return Array.from({ length: quantity }, () => ({
         event_id: eventId,
         ticket_type: ticketType.name,
-        unique_id: generateUniqueTicketId(eventId, index),
+        unique_id: generateUniqueTicketId(),
         status: 'available',
         price: parseFloat(ticketType.price),
         service_fee: parseFloat(ticketType.serviceFee),
@@ -28,15 +27,12 @@ export const createTicketsForEvent = async (
 
     if (error) {
       console.error('Error creating tickets:', error);
-      toast.error('Failed to create tickets');
       return false;
     }
 
-    toast.success(`Successfully created ${tickets.length} tickets`);
     return true;
   } catch (error) {
     console.error('Error in createTicketsForEvent:', error);
-    toast.error('Failed to create tickets');
     return false;
   }
 };
