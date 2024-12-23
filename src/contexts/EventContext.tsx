@@ -1,48 +1,90 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Event {
+  id: string;
   name: string;
   startDate: string;
   startTime: string;
   location: string;
   description: string;
   capacity: string;
-  category: string;
   ticketTypes: Array<{
     name: string;
     price: string;
     quantity: string;
-    serviceFee: string;
-    perks?: string;
-    customFields?: string[];
   }>;
 }
 
 interface EventContextType {
   events: Event[];
-  addEvent: (event: Event) => void;
+  setEvents: React.Dispatch<React.SetStateAction<Event[]>>;
+  fetchEvents: () => Promise<void>;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
-export function EventProvider({ children }: { children: ReactNode }) {
-  // Initialize state from localStorage if available
-  const [events, setEvents] = useState<Event[]>(() => {
-    const savedEvents = localStorage.getItem('events');
-    return savedEvents ? JSON.parse(savedEvents) : [];
-  });
+export function EventProvider({ children }: { children: React.ReactNode }) {
+  const [events, setEvents] = useState<Event[]>([]);
 
-  // Save to localStorage whenever events change
-  useEffect(() => {
-    localStorage.setItem('events', JSON.stringify(events));
-  }, [events]);
+  const fetchEvents = async () => {
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.access_token) {
+        console.error("No session found");
+        return;
+      }
 
-  const addEvent = (event: Event) => {
-    setEvents((prevEvents) => [...prevEvents, event]);
+      const { data, error } = await supabase
+        .from("events")
+        .select("*");
+
+      if (error) {
+        console.error("Error fetching events:", error);
+        toast.error("Failed to fetch events");
+        return;
+      }
+
+      if (data) {
+        const formattedEvents = data.map(event => ({
+          id: event.id,
+          name: event.name,
+          startDate: event.start_date,
+          startTime: event.start_time,
+          location: event.location || "",
+          description: event.description || "",
+          capacity: event.capacity?.toString() || "",
+          ticketTypes: [] // You might want to fetch ticket types separately
+        }));
+        setEvents(formattedEvents);
+      }
+    } catch (error) {
+      console.error("Error in fetchEvents:", error);
+      toast.error("Failed to fetch events");
+    }
   };
 
+  useEffect(() => {
+    fetchEvents();
+
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        fetchEvents();
+      } else {
+        setEvents([]); // Clear events when user logs out
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   return (
-    <EventContext.Provider value={{ events, addEvent }}>
+    <EventContext.Provider value={{ events, setEvents, fetchEvents }}>
       {children}
     </EventContext.Provider>
   );
@@ -51,7 +93,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
 export function useEvents() {
   const context = useContext(EventContext);
   if (context === undefined) {
-    throw new Error('useEvents must be used within an EventProvider');
+    throw new Error("useEvents must be used within an EventProvider");
   }
   return context;
 }
