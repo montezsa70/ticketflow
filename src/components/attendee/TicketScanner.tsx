@@ -14,18 +14,18 @@ interface TicketScannerProps {
   onClose: () => void;
 }
 
-interface QrResult {
-  text: string;
-}
+type Result = {
+  getText(): string;
+};
 
 export function TicketScanner({ isOpen, onClose }: TicketScannerProps) {
   const [scanning, setScanning] = useState(true);
 
-  const handleScan = async (result: QrResult | null) => {
+  const handleScan = async (result: Result | null) => {
     if (!result || !scanning) return;
     
     setScanning(false); // Prevent multiple scans
-    const ticketId = result.text;
+    const ticketId = result.getText();
 
     try {
       // First, get the ticket status
