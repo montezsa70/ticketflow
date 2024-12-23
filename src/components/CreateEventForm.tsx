@@ -107,11 +107,12 @@ export function CreateEventForm() {
 
       if (success) {
         addEvent({
+          id: eventResult.id,  // Include the ID from Supabase
           ...eventData,
           ticketTypes: ticketTypes.map(ticket => ({
-            ...ticket,
+            name: ticket.name,
             price: ticket.price,
-            serviceFee: ticket.serviceFee,
+            quantity: ticket.quantity,
           }))
         });
         toast.success("Event and tickets created successfully!");
