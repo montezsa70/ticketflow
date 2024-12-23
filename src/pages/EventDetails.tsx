@@ -2,13 +2,20 @@ import { useParams } from "react-router-dom";
 import { useEvents } from "@/contexts/EventContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Calendar, Clock, MapPin, Users, Ticket, ArrowLeft } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { createTicket, generateTicketPDF } from "@/utils/ticketUtils";
 
 export default function EventDetails() {
   const { eventId } = useParams();
   const { events } = useEvents();
   const event = events.find((e, index) => index.toString() === eventId);
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   if (!event) {
     return (
@@ -22,6 +29,34 @@ export default function EventDetails() {
       </div>
     );
   }
+
+  const handlePurchase = async (ticketType: any) => {
+    if (!customerEmail) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const ticket = await createTicket(
+        eventId!,
+        ticketType.name,
+        parseFloat(ticketType.price),
+        parseFloat(ticketType.serviceFee),
+        customerEmail
+      );
+
+      const doc = await generateTicketPDF(ticket, event);
+      doc.save(`ticket-${ticket.unique_id}.pdf`);
+      
+      toast.success("Ticket purchased successfully! Your ticket has been downloaded.");
+    } catch (error) {
+      console.error('Purchase error:', error);
+      toast.error("Failed to process ticket purchase");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -95,7 +130,24 @@ export default function EventDetails() {
                               </div>
                             </div>
                           </div>
-                          <Button className="w-full">Proceed to Payment</Button>
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Email Address</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              placeholder="Enter your email"
+                              value={customerEmail}
+                              onChange={(e) => setCustomerEmail(e.target.value)}
+                              className="input-glass"
+                            />
+                          </div>
+                          <Button 
+                            className="w-full" 
+                            onClick={() => handlePurchase(ticket)}
+                            disabled={isProcessing}
+                          >
+                            {isProcessing ? "Processing..." : "Complete Purchase"}
+                          </Button>
                         </div>
                       </DialogContent>
                     </Dialog>
