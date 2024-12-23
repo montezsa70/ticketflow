@@ -9,6 +9,7 @@ import { useEvents } from "@/contexts/EventContext";
 import { TicketTypeForm } from "./ticket/TicketTypeForm";
 import { createTicketsForEvent } from "@/services/ticketService";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import {
   Select,
   SelectContent,
@@ -31,6 +32,7 @@ interface TicketType {
 
 export function CreateEventForm() {
   const { addEvent } = useEvents();
+  const { isAdmin, isLoading } = useAdminAuth();
   const [eventData, setEventData] = useState({
     name: "",
     startDate: "",
@@ -64,19 +66,29 @@ export function CreateEventForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!isAdmin) {
+      toast.error("Only admin users can create events");
+      return;
+    }
+
     if (!eventData.category) {
       toast.error("Please select an event category");
       return;
     }
 
-    // Validate required time fields
     if (!eventData.startTime) {
       toast.error("Start time is required");
       return;
     }
 
     try {
-      // Prepare the event data, converting empty strings to null for nullable fields
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        toast.error("Authentication error");
+        return;
+      }
+
       const eventPayload = {
         name: eventData.name,
         start_date: eventData.startDate,
@@ -87,9 +99,9 @@ export function CreateEventForm() {
         description: eventData.description || null,
         capacity: eventData.capacity ? parseInt(eventData.capacity) : null,
         category: eventData.category,
+        created_by: user.id
       };
 
-      // Create the event in Supabase
       const { data: eventResult, error: eventError } = await supabase
         .from('events')
         .insert(eventPayload)
@@ -102,12 +114,11 @@ export function CreateEventForm() {
         return;
       }
 
-      // Then create tickets for the event
       const success = await createTicketsForEvent(eventResult.id, ticketTypes);
 
       if (success) {
         addEvent({
-          id: eventResult.id,  // Include the ID from Supabase
+          id: eventResult.id,
           ...eventData,
           ticketTypes: ticketTypes.map(ticket => ({
             name: ticket.name,
@@ -167,6 +178,14 @@ export function CreateEventForm() {
     newTicketTypes[ticketIndex].customFields.push("");
     setTicketTypes(newTicketTypes);
   };
+
+  if (isLoading) {
+    return <div className="text-center py-8">Loading...</div>;
+  }
+
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
