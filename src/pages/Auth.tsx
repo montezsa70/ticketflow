@@ -50,9 +50,6 @@ const AuthPage = () => {
             }
           }}
           providers={[]}
-          onError={(error) => {
-            toast.error(error.message);
-          }}
         />
       </div>
     </div>
