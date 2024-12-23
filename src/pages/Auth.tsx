@@ -2,13 +2,14 @@ import { Auth } from "@supabase/auth-ui-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 const AuthPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+      if (event === 'SIGNED_IN' && session) {
         navigate('/admin');
       }
     });
@@ -49,6 +50,9 @@ const AuthPage = () => {
             }
           }}
           providers={[]}
+          onError={(error) => {
+            toast.error(error.message);
+          }}
         />
       </div>
     </div>
