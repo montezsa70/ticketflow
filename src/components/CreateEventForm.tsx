@@ -69,21 +69,30 @@ export function CreateEventForm() {
       return;
     }
 
+    // Validate required time fields
+    if (!eventData.startTime) {
+      toast.error("Start time is required");
+      return;
+    }
+
     try {
-      // First, create the event in Supabase
+      // Prepare the event data, converting empty strings to null for nullable fields
+      const eventPayload = {
+        name: eventData.name,
+        start_date: eventData.startDate,
+        start_time: eventData.startTime,
+        end_date: eventData.endDate || null,
+        end_time: eventData.endTime || null,
+        location: eventData.location || null,
+        description: eventData.description || null,
+        capacity: eventData.capacity ? parseInt(eventData.capacity) : null,
+        category: eventData.category,
+      };
+
+      // Create the event in Supabase
       const { data: eventResult, error: eventError } = await supabase
         .from('events')
-        .insert({
-          name: eventData.name,
-          start_date: eventData.startDate,
-          start_time: eventData.startTime,
-          end_date: eventData.endDate,
-          end_time: eventData.endTime,
-          location: eventData.location,
-          description: eventData.description,
-          capacity: parseInt(eventData.capacity),
-          category: eventData.category,
-        })
+        .insert(eventPayload)
         .select()
         .single();
 
