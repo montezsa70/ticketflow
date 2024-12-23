@@ -14,14 +14,18 @@ interface TicketScannerProps {
   onClose: () => void;
 }
 
+interface QrResult {
+  text: string;
+}
+
 export function TicketScanner({ isOpen, onClose }: TicketScannerProps) {
   const [scanning, setScanning] = useState(true);
 
-  const handleScan = async (result: any) => {
+  const handleScan = async (result: QrResult | null) => {
     if (!result || !scanning) return;
     
     setScanning(false); // Prevent multiple scans
-    const ticketId = result?.text;
+    const ticketId = result.text;
 
     try {
       // First, get the ticket status
@@ -74,11 +78,6 @@ export function TicketScanner({ isOpen, onClose }: TicketScannerProps) {
     setScanning(true);
   };
 
-  const handleError = (error: any) => {
-    console.error(error);
-    toast.error('Error accessing camera');
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
       <DialogContent className="sm:max-w-md">
@@ -89,7 +88,6 @@ export function TicketScanner({ isOpen, onClose }: TicketScannerProps) {
           <QrReader
             constraints={{ facingMode: 'environment' }}
             onResult={handleScan}
-            onError={handleError}
             className="w-full h-full"
           />
         </div>
