@@ -1,7 +1,7 @@
 import { Auth } from "@supabase/auth-ui-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const AuthPage = () => {
@@ -9,24 +9,25 @@ const AuthPage = () => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        navigate('/admin');
+      if (event === "SIGNED_IN") {
+        toast.success("Successfully signed in!");
+        navigate("/");
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8 glass-panel p-8">
-        <div className="text-center space-y-6">
-          <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
+    <div className="min-h-screen flex items-center justify-center bg-black/95">
+      <div className="w-full max-w-md p-8 glass-panel rounded-lg shadow-xl">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
             TicketFlow
           </h1>
-          <p className="text-white/60">
-            Sign in to access the admin dashboard
-          </p>
+          <p className="text-white/60 mt-2">Sign in to manage your events</p>
         </div>
 
         <Auth
@@ -35,19 +36,34 @@ const AuthPage = () => {
             theme: {
               default: {
                 colors: {
-                  brand: '#9b87f5',
-                  brandAccent: '#7E69AB',
+                  brand: 'rgb(124, 58, 237)',
+                  brandAccent: 'rgb(139, 92, 246)',
                   inputBackground: 'rgba(255, 255, 255, 0.05)',
+                  inputText: 'white',
                   inputBorder: 'rgba(255, 255, 255, 0.1)',
-                }
-              }
+                  inputBorderFocus: 'rgba(124, 58, 237, 0.5)',
+                  inputBorderHover: 'rgba(255, 255, 255, 0.2)',
+                  defaultButtonBackground: 'rgba(255, 255, 255, 0.05)',
+                  defaultButtonBackgroundHover: 'rgba(255, 255, 255, 0.1)',
+                  defaultButtonBorder: 'rgba(255, 255, 255, 0.1)',
+                  defaultButtonText: 'white',
+                  dividerBackground: 'rgba(255, 255, 255, 0.1)',
+                },
+                space: {
+                  inputPadding: '1rem',
+                  buttonPadding: '1rem',
+                },
+                borderWidths: {
+                  buttonBorderWidth: '1px',
+                  inputBorderWidth: '1px',
+                },
+                radii: {
+                  borderRadiusButton: '0.5rem',
+                  buttonBorderRadius: '0.5rem',
+                  inputBorderRadius: '0.5rem',
+                },
+              },
             },
-            className: {
-              container: 'space-y-4',
-              button: 'bg-purple-gradient hover:opacity-90 transition-opacity w-full',
-              input: 'input-glass w-full',
-              label: 'text-white/80',
-            }
           }}
           providers={[]}
         />
