@@ -7,6 +7,7 @@ import { EventProvider } from "@/contexts/EventContext";
 import Index from "./pages/Index";
 import EventPortal from "./pages/EventPortal";
 import EventDetails from "./pages/EventDetails";
+import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +19,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<Index />} />
             <Route path="/" element={<EventPortal />} />
             <Route path="/event/:eventId" element={<EventDetails />} />

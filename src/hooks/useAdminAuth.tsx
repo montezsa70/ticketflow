@@ -17,7 +17,7 @@ export const useAdminAuth = () => {
         
         if (!session) {
           toast.error("Please sign in to access this page");
-          navigate('/');
+          navigate('/auth');
           return;
         }
 
@@ -34,7 +34,7 @@ export const useAdminAuth = () => {
       } catch (error) {
         console.error('Auth error:', error);
         toast.error("Authentication error");
-        navigate('/');
+        navigate('/auth');
       } finally {
         setIsLoading(false);
       }
