@@ -4,10 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Download, Mail, RefreshCw, QrCode } from "lucide-react";
 import { useEvents } from "@/contexts/EventContext";
+import { TicketScanner } from "./TicketScanner";
 
 export function AttendeeManagement() {
   const { events } = useEvents();
   const [searchTerm, setSearchTerm] = useState("");
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   
   // Mock attendee data - would be replaced with real data from Supabase
   const mockAttendees = events.flatMap(event => 
@@ -60,6 +62,14 @@ export function AttendeeManagement() {
           </div>
           <div className="space-x-4">
             <Button
+              onClick={() => setIsScannerOpen(true)}
+              variant="outline"
+              className="border-white/10 hover:bg-white/5"
+            >
+              <QrCode className="h-4 w-4 mr-2" />
+              Scan Ticket
+            </Button>
+            <Button
               onClick={exportAttendees}
               variant="outline"
               className="border-white/10 hover:bg-white/5"
@@ -108,6 +118,7 @@ export function AttendeeManagement() {
                       variant="outline"
                       size="sm"
                       className="border-white/10 hover:bg-white/5"
+                      onClick={() => setIsScannerOpen(true)}
                     >
                       <QrCode className="h-4 w-4 mr-2" />
                       Check-In
@@ -137,6 +148,11 @@ export function AttendeeManagement() {
           </Table>
         </div>
       </div>
+
+      <TicketScanner 
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+      />
     </div>
   );
 }
