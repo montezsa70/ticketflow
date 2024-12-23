@@ -49,7 +49,6 @@ const AuthPage = () => {
               label: 'text-white/80',
             }
           }}
-          theme="dark"
           providers={[]}
         />
       </div>
