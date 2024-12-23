@@ -10,6 +10,7 @@ interface Event {
   location: string;
   description: string;
   capacity: string;
+  category: string;
   ticketTypes: Array<{
     name: string;
     price: string;
@@ -21,6 +22,7 @@ interface EventContextType {
   events: Event[];
   setEvents: React.Dispatch<React.SetStateAction<Event[]>>;
   fetchEvents: () => Promise<void>;
+  addEvent: (event: Event) => void;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
@@ -56,6 +58,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
           location: event.location || "",
           description: event.description || "",
           capacity: event.capacity?.toString() || "",
+          category: event.category || "",
           ticketTypes: [] // You might want to fetch ticket types separately
         }));
         setEvents(formattedEvents);
@@ -64,6 +67,10 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       console.error("Error in fetchEvents:", error);
       toast.error("Failed to fetch events");
     }
+  };
+
+  const addEvent = (event: Event) => {
+    setEvents(prev => [...prev, event]);
   };
 
   useEffect(() => {
@@ -84,7 +91,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <EventContext.Provider value={{ events, setEvents, fetchEvents }}>
+    <EventContext.Provider value={{ events, setEvents, fetchEvents, addEvent }}>
       {children}
     </EventContext.Provider>
   );
