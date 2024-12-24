@@ -38,14 +38,14 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
           end_time: event.end_time,
           location: event.location,
           description: event.description,
-          capacity: event.capacity,
+          capacity: event.capacity?.toString() || "0",
           category: event.category,
           created_at: event.created_at,
           created_by: event.created_by,
           updated_at: event.updated_at,
-          startDate: event.start_date, // Add compatibility fields
-          startTime: event.start_time, // Add compatibility fields
-          ticketTypes: [] // Initialize empty array
+          startDate: event.start_date,
+          startTime: event.start_time,
+          ticketTypes: []
         }));
         setEvents(formattedEvents);
       }

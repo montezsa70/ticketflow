@@ -43,6 +43,7 @@ export default function EventDetails() {
           ...data,
           startDate: data.start_date,
           startTime: data.start_time,
+          capacity: data.capacity?.toString() || "0", // Convert capacity to string
           ticketTypes: [] // Initialize empty array, you might want to fetch this separately
         };
 

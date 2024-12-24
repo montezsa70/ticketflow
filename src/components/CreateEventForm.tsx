@@ -97,7 +97,7 @@ export function CreateEventForm() {
         end_time: eventData.endTime || null,
         location: eventData.location || null,
         description: eventData.description || null,
-        capacity: eventData.capacity,
+        capacity: eventData.capacity ? parseInt(eventData.capacity) : null,
         category: eventData.category,
         created_by: user.id
       };
@@ -126,7 +126,7 @@ export function CreateEventForm() {
           end_time: eventResult.end_time,
           location: eventResult.location,
           description: eventResult.description,
-          capacity: eventData.capacity,
+          capacity: eventResult.capacity?.toString() || "0",
           category: eventResult.category,
           created_at: eventResult.created_at,
           created_by: eventResult.created_by,

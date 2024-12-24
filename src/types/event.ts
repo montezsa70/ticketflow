@@ -7,11 +7,11 @@ export interface Event {
   end_time: string | null;
   location: string | null;
   description: string | null;
-  capacity: string;  // Changed to string for consistency
+  capacity: string;
   category: string | null;
-  created_at?: string | null;
-  created_by?: string | null;
-  updated_at?: string | null;
+  created_at: string | null;
+  created_by: string | null;
+  updated_at: string | null;
   startDate: string;
   startTime: string;
   ticketTypes: Array<{
