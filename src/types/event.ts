@@ -9,8 +9,11 @@ export interface Event {
   description: string | null;
   capacity: number | null;
   category: string | null;
-  startDate: string; // Added for compatibility
-  startTime: string; // Added for compatibility
+  created_at?: string | null;
+  created_by?: string | null;
+  updated_at?: string | null;
+  startDate: string;
+  startTime: string;
   ticketTypes: Array<{
     name: string;
     price: string;

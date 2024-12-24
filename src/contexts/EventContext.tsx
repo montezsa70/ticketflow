@@ -1,22 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-interface Event {
-  id?: string;
-  name: string;
-  startDate: string;
-  startTime: string;
-  location: string;
-  description: string;
-  capacity: string;
-  category: string;
-  ticketTypes: Array<{
-    name: string;
-    price: string;
-    quantity: string;
-  }>;
-}
+import { Event } from "@/types/event";
 
 interface EventContextType {
   events: Event[];
@@ -44,16 +29,23 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (data) {
-        const formattedEvents = data.map(event => ({
+        const formattedEvents: Event[] = data.map(event => ({
           id: event.id,
           name: event.name,
-          startDate: event.start_date,
-          startTime: event.start_time,
-          location: event.location || "",
-          description: event.description || "",
-          capacity: event.capacity?.toString() || "",
-          category: event.category || "",
-          ticketTypes: [] // You might want to fetch ticket types separately
+          start_date: event.start_date,
+          start_time: event.start_time,
+          end_date: event.end_date,
+          end_time: event.end_time,
+          location: event.location,
+          description: event.description,
+          capacity: event.capacity,
+          category: event.category,
+          created_at: event.created_at,
+          created_by: event.created_by,
+          updated_at: event.updated_at,
+          startDate: event.start_date, // Add compatibility fields
+          startTime: event.start_time, // Add compatibility fields
+          ticketTypes: [] // Initialize empty array
         }));
         setEvents(formattedEvents);
       }

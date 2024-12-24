@@ -38,7 +38,15 @@ export default function EventDetails() {
           return;
         }
 
-        setEvent(data);
+        // Transform the data to match our Event interface
+        const transformedEvent: Event = {
+          ...data,
+          startDate: data.start_date,
+          startTime: data.start_time,
+          ticketTypes: [] // Initialize empty array, you might want to fetch this separately
+        };
+
+        setEvent(transformedEvent);
       } catch (error) {
         console.error('Error:', error);
         setError("An unexpected error occurred");
@@ -84,28 +92,28 @@ export default function EventDetails() {
         <div className="glass-panel p-8 space-y-8 animate-fade-in">
           <div className="space-y-4">
             <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
-              {event.name}
+              {event?.name}
             </h1>
-            <p className="text-lg text-white/80">{event.description}</p>
+            <p className="text-lg text-white/80">{event?.description}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="flex items-center space-x-3 text-white/80">
                 <Calendar className="h-5 w-5" />
-                <span>{event.start_date}</span>
+                <span>{event?.start_date}</span>
               </div>
               <div className="flex items-center space-x-3 text-white/80">
                 <Clock className="h-5 w-5" />
-                <span>{event.start_time}</span>
+                <span>{event?.start_time}</span>
               </div>
-              {event.location && (
+              {event?.location && (
                 <div className="flex items-center space-x-3 text-white/80">
                   <MapPin className="h-5 w-5" />
                   <span>{event.location}</span>
                 </div>
               )}
-              {event.capacity && (
+              {event?.capacity && (
                 <div className="flex items-center space-x-3 text-white/80">
                   <Users className="h-5 w-5" />
                   <span>{event.capacity} attendees</span>
@@ -113,7 +121,7 @@ export default function EventDetails() {
               )}
             </div>
 
-            <TicketPurchaseSection event={event} />
+            {event && <TicketPurchaseSection event={event} />}
           </div>
         </div>
       </div>
