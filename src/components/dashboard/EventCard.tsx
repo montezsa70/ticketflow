@@ -1,11 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Clock, MapPin, Users, Ticket } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Ticket, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useEvents } from "@/contexts/EventContext";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 interface EventCardProps {
   event: {
+    id: string;
     name: string;
     startDate: string;
     startTime: string;
@@ -18,10 +23,32 @@ interface EventCardProps {
       quantity: string;
     }>;
   };
-  index: number;
 }
 
-export function EventCard({ event, index }: EventCardProps) {
+export function EventCard({ event }: EventCardProps) {
+  const { isAdmin } = useAdminAuth();
+  const { fetchEvents } = useEvents();
+
+  const handleDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', event.id);
+
+      if (error) {
+        toast.error("Failed to delete event");
+        return;
+      }
+
+      toast.success("Event deleted successfully");
+      fetchEvents(); // Refresh the events list
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      toast.error("Failed to delete event");
+    }
+  };
+
   return (
     <Card className="glass-panel overflow-hidden group hover:border-primary/50 transition-all duration-300">
       <CardHeader>
@@ -34,6 +61,16 @@ export function EventCard({ event, index }: EventCardProps) {
               {event.description}
             </CardDescription>
           </div>
+          {isAdmin && (
+            <Button
+              variant="destructive"
+              size="icon"
+              onClick={handleDelete}
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -64,7 +101,7 @@ export function EventCard({ event, index }: EventCardProps) {
                   {event.ticketTypes.length} ticket types available
                 </span>
               </div>
-              <Link to={`/event/${index}`}>
+              <Link to={`/event/${event.id}`}>
                 <Button variant="secondary" className="hover:bg-primary/20">
                   View Details
                 </Button>
