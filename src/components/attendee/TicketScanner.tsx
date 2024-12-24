@@ -41,8 +41,8 @@ export function TicketScanner({ isOpen, onClose }: TicketScannerProps) {
         return;
       }
 
-      if (ticket.status === 'used') {
-        toast.error('Ticket has already been used');
+      if (ticket.scanned_at) {
+        toast.error('Ticket has already been scanned');
         setScanning(true);
         return;
       }

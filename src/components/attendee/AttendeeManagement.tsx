@@ -1,39 +1,70 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Download, Mail, RefreshCw, QrCode } from "lucide-react";
 import { useEvents } from "@/contexts/EventContext";
 import { TicketScanner } from "./TicketScanner";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 
 export function AttendeeManagement() {
   const { events } = useEvents();
   const [searchTerm, setSearchTerm] = useState("");
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [tickets, setTickets] = useState<any[]>([]);
   
-  // Mock attendee data - would be replaced with real data from Supabase
-  const mockAttendees = events.flatMap(event => 
-    Array(Math.floor(Math.random() * 5) + 1).fill(null).map((_, index) => ({
-      id: `${event.name}-${index}`,
-      eventName: event.name,
-      name: `Attendee ${index + 1}`,
-      email: `attendee${index + 1}@example.com`,
-      ticketType: event.ticketTypes[0]?.name || "General Admission",
-      checkedIn: false,
-    }))
-  );
+  const fetchTickets = async () => {
+    const { data, error } = await supabase
+      .from('tickets')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching tickets:', error);
+      return;
+    }
+    
+    if (data) {
+      setTickets(data);
+    }
+  };
 
-  const filteredAttendees = mockAttendees.filter(attendee =>
-    Object.values(attendee).some(value =>
-      value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => {
+    fetchTickets();
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tickets'
+        },
+        () => {
+          fetchTickets();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const filteredTickets = tickets.filter(ticket =>
+    Object.values(ticket).some(value =>
+      value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
 
   const exportAttendees = () => {
     const csvContent = "data:text/csv;charset=utf-8," + 
-      "Name,Email,Event,Ticket Type,Checked In\n" +
-      filteredAttendees.map(a => 
-        `${a.name},${a.email},${a.eventName},${a.ticketType},${a.checkedIn}`
+      "Email,Event,Ticket Type,Status\n" +
+      filteredTickets.map(t => 
+        `${t.customer_email},${t.event_id},${t.ticket_type},${t.scanned_at ? 'Claimed' : 'Not Claimed'}`
       ).join("\n");
     
     const encodedUri = encodeURI(csvContent);
@@ -98,31 +129,23 @@ export function AttendeeManagement() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-white/5">
-                <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Event</TableHead>
                 <TableHead>Ticket Type</TableHead>
-                <TableHead>Check-In</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredAttendees.map((attendee) => (
-                <TableRow key={attendee.id} className="hover:bg-white/5">
-                  <TableCell>{attendee.name}</TableCell>
-                  <TableCell>{attendee.email}</TableCell>
-                  <TableCell>{attendee.eventName}</TableCell>
-                  <TableCell>{attendee.ticketType}</TableCell>
+              {filteredTickets.map((ticket) => (
+                <TableRow key={ticket.id} className="hover:bg-white/5">
+                  <TableCell>{ticket.customer_email}</TableCell>
+                  <TableCell>{ticket.event_id}</TableCell>
+                  <TableCell>{ticket.ticket_type}</TableCell>
                   <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-white/10 hover:bg-white/5"
-                      onClick={() => setIsScannerOpen(true)}
-                    >
-                      <QrCode className="h-4 w-4 mr-2" />
-                      Check-In
-                    </Button>
+                    <Badge variant={ticket.scanned_at ? "success" : "secondary"}>
+                      {ticket.scanned_at ? 'Claimed' : 'Not Claimed'}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="space-x-2">
