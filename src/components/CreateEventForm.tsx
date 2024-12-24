@@ -1,22 +1,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Calendar, MapPin, Upload, Users, Music, Briefcase, Palette, Trophy } from "lucide-react";
+import { Music, Briefcase, Palette, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import { useEvents } from "@/contexts/EventContext";
 import { TicketTypeForm } from "./ticket/TicketTypeForm";
 import { createTicketsForEvent } from "@/services/ticketService";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { EventDetailsSection } from "./event/EventDetailsSection";
+import { EventBannerSection } from "./event/EventBannerSection";
+import { Event } from "@/types/event";
 
 interface TicketType {
   name: string;
@@ -204,136 +197,14 @@ export function CreateEventForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
       <div className="glass-panel p-6 space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="name">Event Name</Label>
-          <Input
-            id="name"
-            name="name"
-            placeholder="Enter event name"
-            className="input-glass"
-            value={eventData.name}
-            onChange={handleChange}
-          />
-        </div>
+        <EventDetailsSection
+          eventData={eventData}
+          handleChange={handleChange}
+          handleCategoryChange={handleCategoryChange}
+          categories={categories}
+        />
 
-        <div className="space-y-2">
-          <Label htmlFor="category">Event Category</Label>
-          <Select value={eventData.category} onValueChange={handleCategoryChange}>
-            <SelectTrigger className="input-glass">
-              <SelectValue placeholder="Select a category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map(({ name }) => (
-                <SelectItem key={name} value={name}>
-                  {name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Start Date & Time</Label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <Input
-                  type="date"
-                  name="startDate"
-                  className="input-glass"
-                  value={eventData.startDate}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="flex-1">
-                <Input
-                  type="time"
-                  name="startTime"
-                  className="input-glass"
-                  value={eventData.startTime}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>End Date & Time</Label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <Input
-                  type="date"
-                  name="endDate"
-                  className="input-glass"
-                  value={eventData.endDate}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="flex-1">
-                <Input
-                  type="time"
-                  name="endTime"
-                  className="input-glass"
-                  value={eventData.endTime}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="location">Location</Label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              id="location"
-              name="location"
-              placeholder="Add location"
-              className="input-glass pl-10"
-              value={eventData.location}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            name="description"
-            placeholder="Describe your event"
-            className="input-glass min-h-[100px]"
-            value={eventData.description}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="capacity">Capacity</Label>
-          <div className="relative">
-            <Users className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              id="capacity"
-              name="capacity"
-              type="number"
-              placeholder="Event capacity"
-              className="input-glass pl-10"
-              value={eventData.capacity}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Event Banner</Label>
-          <div className="border-2 border-dashed border-white/10 rounded-lg p-8 text-center hover:border-white/20 transition-colors">
-            <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
-              Drag and drop your event banner here, or click to select
-            </p>
-          </div>
-        </div>
+        <EventBannerSection />
 
         <div className="space-y-4">
           <h3 className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
