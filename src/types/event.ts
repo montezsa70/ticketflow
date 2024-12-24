@@ -7,7 +7,7 @@ export interface Event {
   end_time: string | null;
   location: string | null;
   description: string | null;
-  capacity: number | null;
+  capacity: string;  // Changed to string for consistency
   category: string | null;
   created_at?: string | null;
   created_by?: string | null;

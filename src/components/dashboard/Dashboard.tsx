@@ -9,7 +9,7 @@ export function Dashboard() {
     totalEvents: events.length,
     totalTickets: events.reduce((acc, event) => 
       acc + event.ticketTypes.reduce((sum, ticket) => sum + parseInt(ticket.quantity), 0), 0),
-    totalAttendees: events.reduce((acc, event) => acc + parseInt(event.capacity), 0),
+    totalAttendees: events.reduce((acc, event) => acc + (event.capacity ? parseInt(event.capacity) : 0), 0),
   };
 
   return (

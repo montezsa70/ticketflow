@@ -97,7 +97,7 @@ export function CreateEventForm() {
         end_time: eventData.endTime || null,
         location: eventData.location || null,
         description: eventData.description || null,
-        capacity: eventData.capacity ? parseInt(eventData.capacity) : null,
+        capacity: eventData.capacity,
         category: eventData.category,
         created_by: user.id
       };
@@ -117,15 +117,29 @@ export function CreateEventForm() {
       const success = await createTicketsForEvent(eventResult.id, ticketTypes);
 
       if (success) {
-        addEvent({
+        const newEvent: Event = {
           id: eventResult.id,
-          ...eventData,
+          name: eventResult.name,
+          start_date: eventResult.start_date,
+          start_time: eventResult.start_time,
+          end_date: eventResult.end_date,
+          end_time: eventResult.end_time,
+          location: eventResult.location,
+          description: eventResult.description,
+          capacity: eventData.capacity,
+          category: eventResult.category,
+          created_at: eventResult.created_at,
+          created_by: eventResult.created_by,
+          updated_at: eventResult.updated_at,
+          startDate: eventResult.start_date,
+          startTime: eventResult.start_time,
           ticketTypes: ticketTypes.map(ticket => ({
             name: ticket.name,
             price: ticket.price,
             quantity: ticket.quantity,
           }))
-        });
+        };
+        addEvent(newEvent);
         toast.success("Event and tickets created successfully!");
       }
     } catch (error) {

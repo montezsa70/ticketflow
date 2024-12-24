@@ -90,8 +90,20 @@ const EventPortal = () => {
           {filteredEvents.length === 0 ? (
             <p className="text-white/60 col-span-full text-center py-8">No events found in this category</p>
           ) : (
-            filteredEvents.map((event, index) => (
-              <EventCard key={index} event={event} index={index} />
+            filteredEvents.map((event) => (
+              <EventCard 
+                key={event.id} 
+                event={{
+                  id: event.id,
+                  name: event.name,
+                  startDate: event.startDate,
+                  startTime: event.startTime,
+                  location: event.location || '',
+                  description: event.description || '',
+                  capacity: event.capacity,
+                  ticketTypes: event.ticketTypes
+                }} 
+              />
             ))
           )}
         </div>
