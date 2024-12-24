@@ -32,20 +32,6 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
 
   const fetchEvents = async () => {
     try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error("Session error:", sessionError);
-        toast.error("Authentication error");
-        return;
-      }
-
-      if (!sessionData.session) {
-        console.error("No active session");
-        toast.error("Please sign in to access events");
-        return;
-      }
-
       const { data, error } = await supabase
         .from("events")
         .select("*")
@@ -79,13 +65,6 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
 
   const addEvent = async (event: Event) => {
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      
-      if (!sessionData.session) {
-        toast.error("Please sign in to add events");
-        return;
-      }
-
       setEvents(prev => [...prev, event]);
     } catch (error) {
       console.error("Error in addEvent:", error);
@@ -96,10 +75,10 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     fetchEvents();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
         fetchEvents();
-      } else {
+      } else if (event === 'SIGNED_OUT') {
         setEvents([]); // Clear events when user logs out
       }
     });
