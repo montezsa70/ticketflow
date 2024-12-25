@@ -1,16 +1,19 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, MapPin, Calendar, Star, Filter, Ticket, Music, Briefcase, Palette, Trophy } from "lucide-react";
 import { useEvents } from "@/contexts/EventContext";
 import { EventCard } from "@/components/dashboard/EventCard";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const EventPortal = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { events } = useEvents();
+  const navigate = useNavigate();
 
   const categories = [
     { name: "Music", icon: Music },
@@ -18,6 +21,12 @@ const EventPortal = () => {
     { name: "Arts", icon: Palette },
     { name: "Business", icon: Briefcase }
   ];
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success("Successfully signed out!");
+    navigate('/auth');
+  };
 
   const filteredEvents = events.filter(event => {
     const matchesCategory = !selectedCategory || 
@@ -33,10 +42,7 @@ const EventPortal = () => {
             TicketFlow
           </h1>
           <div className="flex gap-4">
-            <Link to="/admin">
-              <Button variant="outline">Admin Portal</Button>
-            </Link>
-            <Button>Sign In</Button>
+            <Button onClick={handleSignOut}>Sign Out</Button>
           </div>
         </div>
       </header>

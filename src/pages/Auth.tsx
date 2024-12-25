@@ -10,8 +10,15 @@ const AuthPage = () => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN") {
+        const isAdmin = session?.user?.email === 'admin@ticketflow.com';
         toast.success("Successfully signed in!");
-        navigate("/");
+        
+        // Redirect based on user type
+        if (isAdmin) {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
       }
     });
 
