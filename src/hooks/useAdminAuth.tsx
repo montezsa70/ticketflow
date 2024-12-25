@@ -22,7 +22,7 @@ export const useAdminAuth = () => {
         }
 
         const { data: userData } = await supabase.auth.getUser();
-        const isAdminUser = userData.user?.email === 'admin@ticketflow.com';
+        const isAdminUser = userData.user?.email === 'mongezisilent@gmail.com';
         
         if (!isAdminUser) {
           toast.error("Only admin users can access this page");
