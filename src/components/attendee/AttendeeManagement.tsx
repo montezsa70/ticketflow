@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Download, Mail, RefreshCw, QrCode } from "lucide-react";
 import { useEvents } from "@/contexts/EventContext";
 import { TicketScanner } from "./TicketScanner";
 import { supabase } from "@/integrations/supabase/client";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import { BulkEmailDialog } from "./BulkEmailDialog";
+import { RefundDialog } from "./RefundDialog";
+import { TicketTable } from "./TicketTable";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "sonner";
 
 export function AttendeeManagement() {
   const { events } = useEvents();
@@ -18,11 +17,8 @@ export function AttendeeManagement() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [tickets, setTickets] = useState<any[]>([]);
   const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
-  const [emailSubject, setEmailSubject] = useState("");
-  const [emailContent, setEmailContent] = useState("");
   const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
-  const [refundReason, setRefundReason] = useState("");
   const isMobile = useIsMobile();
   
   const fetchTickets = async () => {
@@ -86,45 +82,6 @@ export function AttendeeManagement() {
     document.body.removeChild(link);
   };
 
-  const handleSendBulkEmail = async () => {
-    try {
-      const response = await supabase.functions.invoke('send-bulk-email', {
-        body: { subject: emailSubject, content: emailContent }
-      });
-
-      if (response.error) throw response.error;
-
-      toast.success("Bulk email sent successfully!");
-      setIsEmailDialogOpen(false);
-      setEmailSubject("");
-      setEmailContent("");
-    } catch (error) {
-      console.error('Error sending bulk email:', error);
-      toast.error("Failed to send bulk email");
-    }
-  };
-
-  const handleProcessRefund = async () => {
-    if (!selectedTicket || !refundReason) return;
-
-    try {
-      const response = await supabase.functions.invoke('process-refund', {
-        body: { ticketId: selectedTicket.id, reason: refundReason }
-      });
-
-      if (response.error) throw response.error;
-
-      toast.success("Refund processed successfully!");
-      setIsRefundDialogOpen(false);
-      setSelectedTicket(null);
-      setRefundReason("");
-      fetchTickets();
-    } catch (error) {
-      console.error('Error processing refund:', error);
-      toast.error("Failed to process refund");
-    }
-  };
-
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="glass-panel p-6">
@@ -165,110 +122,29 @@ export function AttendeeManagement() {
               <Mail className="h-4 w-4 mr-2" />
               Send Bulk Email
             </Button>
-            <Button
-              onClick={() => setIsRefundDialogOpen(true)}
-              variant="outline"
-              className="border-white/10 hover:bg-white/5"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Process Refunds
-            </Button>
           </div>
         </div>
 
-        <div className={`rounded-lg border border-white/10 overflow-x-auto`}>
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-white/5">
-                <TableHead>Email</TableHead>
-                <TableHead>Event</TableHead>
-                <TableHead>Ticket Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTickets.map((ticket) => (
-                <TableRow key={ticket.id} className="hover:bg-white/5">
-                  <TableCell className="max-w-[200px] truncate">{ticket.customer_email}</TableCell>
-                  <TableCell>{ticket.event_id}</TableCell>
-                  <TableCell>{ticket.ticket_type}</TableCell>
-                  <TableCell>
-                    <Badge variant={ticket.scanned_at ? "success" : "secondary"}>
-                      {ticket.scanned_at ? 'Claimed' : 'Not Claimed'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-white/10 hover:bg-white/5"
-                        onClick={() => {
-                          setSelectedTicket(ticket);
-                          setIsRefundDialogOpen(true);
-                        }}
-                      >
-                        Refund
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <TicketTable 
+          tickets={filteredTickets} 
+          onRefund={(ticket) => {
+            setSelectedTicket(ticket);
+            setIsRefundDialogOpen(true);
+          }}
+        />
       </div>
 
-      <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
-        <DialogContent className="glass-panel">
-          <DialogHeader>
-            <DialogTitle>Send Bulk Email</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Email Subject"
-              value={emailSubject}
-              onChange={(e) => setEmailSubject(e.target.value)}
-              className="input-glass"
-            />
-            <Textarea
-              placeholder="Email Content"
-              value={emailContent}
-              onChange={(e) => setEmailContent(e.target.value)}
-              className="input-glass min-h-[200px]"
-            />
-            <Button onClick={handleSendBulkEmail} className="w-full">
-              Send Email
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <BulkEmailDialog 
+        isOpen={isEmailDialogOpen}
+        onOpenChange={setIsEmailDialogOpen}
+      />
 
-      <Dialog open={isRefundDialogOpen} onOpenChange={setIsRefundDialogOpen}>
-        <DialogContent className="glass-panel">
-          <DialogHeader>
-            <DialogTitle>Process Refund</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            {selectedTicket && (
-              <div>
-                <p>Ticket: {selectedTicket.ticket_type}</p>
-                <p>Email: {selectedTicket.customer_email}</p>
-              </div>
-            )}
-            <Textarea
-              placeholder="Refund Reason"
-              value={refundReason}
-              onChange={(e) => setRefundReason(e.target.value)}
-              className="input-glass"
-            />
-            <Button onClick={handleProcessRefund} className="w-full">
-              Process Refund
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <RefundDialog
+        isOpen={isRefundDialogOpen}
+        onOpenChange={setIsRefundDialogOpen}
+        selectedTicket={selectedTicket}
+        onRefundComplete={fetchTickets}
+      />
 
       <TicketScanner 
         isOpen={isScannerOpen}

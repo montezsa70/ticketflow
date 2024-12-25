@@ -36,7 +36,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Get unique emails
     const uniqueEmails = [...new Set(tickets.map(t => t.customer_email))];
 
-    // Send email to each recipient
+    // Send email to each recipient using Resend
     const emailPromises = uniqueEmails.map(async (email) => {
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
