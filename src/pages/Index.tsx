@@ -1,24 +1,15 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { CreateEventForm } from "@/components/CreateEventForm";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { Analytics } from "@/components/analytics/Analytics";
 import { AttendeeManagement } from "@/components/attendee/AttendeeManagement";
 import { CustomizationSettings } from "@/components/settings/CustomizationSettings";
 import { EventProvider } from "@/contexts/EventContext";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 const Index = () => {
   const [activeView, setActiveView] = useState("dashboard");
-  const navigate = useNavigate();
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    toast.success("Successfully signed out!");
-    navigate('/auth');
-  };
 
   const renderContent = () => {
     switch (activeView) {
@@ -37,51 +28,19 @@ const Index = () => {
 
   return (
     <EventProvider>
-      <div className="min-h-screen p-6">
-        <header className="max-w-7xl mx-auto mb-8">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
-              TicketFlow Admin
-            </h1>
-            <div className="space-x-4">
-              <Button
-                onClick={() => setActiveView(activeView === "dashboard" ? "analytics" : "dashboard")}
-                className="bg-purple-gradient hover:opacity-90 transition-opacity"
-              >
-                {activeView === "analytics" ? "View Dashboard" : "View Analytics"}
-              </Button>
-              <Button
-                onClick={() => setActiveView(activeView === "create" ? "dashboard" : "create")}
-                className="bg-purple-gradient hover:opacity-90 transition-opacity"
-              >
-                {activeView === "create" ? "View Dashboard" : "Create Event"}
-              </Button>
-              <Button
-                onClick={() => setActiveView(activeView === "attendees" ? "dashboard" : "attendees")}
-                className="bg-purple-gradient hover:opacity-90 transition-opacity"
-              >
-                {activeView === "attendees" ? "View Dashboard" : "Manage Attendees"}
-              </Button>
-              <Button
-                onClick={() => setActiveView(activeView === "settings" ? "dashboard" : "settings")}
-                className="bg-purple-gradient hover:opacity-90 transition-opacity"
-              >
-                {activeView === "settings" ? "View Dashboard" : "Customization"}
-              </Button>
-              <Button
-                onClick={handleSignOut}
-                variant="destructive"
-              >
-                Sign Out
-              </Button>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <AdminSidebar activeView={activeView} setActiveView={setActiveView} />
+          <main className="flex-1 p-6">
+            <div className="max-w-7xl mx-auto">
+              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400 mb-8">
+                TicketFlow Admin
+              </h1>
+              {renderContent()}
             </div>
-          </div>
-        </header>
-
-        <main className="max-w-7xl mx-auto">
-          {renderContent()}
-        </main>
-      </div>
+          </main>
+        </div>
+      </SidebarProvider>
     </EventProvider>
   );
 };
