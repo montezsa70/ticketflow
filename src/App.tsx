@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { EventProvider } from "@/contexts/EventContext";
-import { SessionContextProvider } from '@supabase/auth-helpers-react';
+import { SessionContextProvider, useSession } from '@supabase/auth-helpers-react';
 import Index from "./pages/Index";
 import EventPortal from "./pages/EventPortal";
 import EventDetails from "./pages/EventDetails";
@@ -16,52 +16,30 @@ import { toast } from "sonner";
 const queryClient = new QueryClient();
 
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const session = useSession();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-
     const checkAdmin = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error || !session) {
-          console.error('Session error:', error);
-          if (mounted) {
-            setIsAdmin(false);
-            setLoading(false);
-          }
+        if (!session) {
+          setIsAdmin(false);
+          setLoading(false);
           return;
         }
 
-        if (mounted) {
-          setIsAdmin(session.user.email === 'mongezisilent@gmail.com');
-          setLoading(false);
-        }
+        setIsAdmin(session.user.email === 'mongezisilent@gmail.com');
+        setLoading(false);
       } catch (error) {
         console.error('Auth error:', error);
-        if (mounted) {
-          setIsAdmin(false);
-          setLoading(false);
-        }
-      }
-    };
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (mounted) {
-        setIsAdmin(session?.user?.email === 'mongezisilent@gmail.com');
+        setIsAdmin(false);
         setLoading(false);
       }
-    });
+    };
 
     checkAdmin();
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
+  }, [session]);
 
   if (loading) return null;
   
@@ -74,56 +52,25 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const ProtectedUserRoute = ({ children }: { children: React.ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const session = useSession();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-
     const checkAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Session error:', error);
-          if (mounted) {
-            setIsAuthenticated(false);
-            setLoading(false);
-          }
-          return;
-        }
-
-        if (mounted) {
-          setIsAuthenticated(!!session);
-          setLoading(false);
-        }
+        setLoading(false);
       } catch (error) {
         console.error('Auth error:', error);
-        if (mounted) {
-          setIsAuthenticated(false);
-          setLoading(false);
-        }
-      }
-    };
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (mounted) {
-        setIsAuthenticated(!!session);
         setLoading(false);
       }
-    });
+    };
 
     checkAuth();
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
+  }, [session]);
 
   if (loading) return null;
   
-  if (!isAuthenticated) {
+  if (!session) {
     toast.error("Please sign in to continue");
     return <Navigate to="/auth" replace />;
   }
