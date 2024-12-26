@@ -9,12 +9,23 @@ export const useAuthInitialization = () => {
 
     const initializeAuth = async () => {
       try {
+        // Get initial session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) console.error('Session error:', sessionError);
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          if (mounted) setInitialized(true);
+          return;
+        }
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-          if (event === 'SIGNED_OUT' && mounted) {
+        // Set up auth state change listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          if (!mounted) return;
+
+          if (event === 'SIGNED_OUT') {
+            // Clear any auth-related state here
             console.log('User signed out');
+          } else if (event === 'SIGNED_IN') {
+            console.log('User signed in');
           }
         });
 
