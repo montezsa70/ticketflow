@@ -57,38 +57,54 @@ const ProtectedUserRoute = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     const checkSession = async () => {
       try {
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        if (error) throw error;
         
-        if (!currentSession) {
-          await supabase.auth.signOut();
-          toast.error("Please sign in to continue");
-          setLoading(false);
-          return;
+        if (!mounted) return;
+
+        if (error || !currentSession) {
+          if (mounted) {
+            setLoading(false);
+            if (error) console.error('Session error:', error);
+            return;
+          }
         }
 
-        // Verify session persistence
         const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (!mounted) return;
+
         if (userError || !user) {
-          throw userError || new Error('User not found');
+          if (mounted) {
+            setLoading(false);
+            if (userError) console.error('User error:', userError);
+            return;
+          }
         }
 
-        setLoading(false);
+        if (mounted) setLoading(false);
       } catch (error) {
-        console.error('Session check error:', error);
-        await supabase.auth.signOut();
-        setLoading(false);
+        if (mounted) {
+          console.error('Session check error:', error);
+          setLoading(false);
+        }
       }
     };
 
     checkSession();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   if (loading) return null;
   
   if (!session?.user) {
+    toast.error("Please sign in to continue");
     return <Navigate to="/auth" replace />;
   }
 
@@ -99,40 +115,38 @@ const App = () => {
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+
     const initializeAuth = async () => {
       try {
-        // Clear any stale sessions first
-        const { error: signOutError } = await supabase.auth.signOut();
-        if (signOutError) throw signOutError;
-        
-        // Check current session
+        // Check current session first
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
+        if (sessionError) console.error('Session error:', sessionError);
 
         // Subscribe to auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-          if (event === 'SIGNED_OUT') {
-            try {
-              await supabase.auth.signOut();
-            } catch (error) {
-              console.error('Signout error:', error);
-            }
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          if (event === 'SIGNED_OUT' && mounted) {
+            // No need to sign out again, just update UI
+            console.log('User signed out');
           }
         });
 
-        setInitialized(true);
+        if (mounted) setInitialized(true);
 
         return () => {
           subscription.unsubscribe();
         };
       } catch (error) {
         console.error('Auth initialization error:', error);
-        // Ensure we still set initialized even if there's an error
-        setInitialized(true);
+        if (mounted) setInitialized(true);
       }
     };
 
     initializeAuth();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   if (!initialized) return null;
