@@ -29,7 +29,9 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
           return;
         }
 
-        setIsAdmin(session.user.email === 'mongezisilent@gmail.com');
+        // Check if user is admin
+        const isAdminUser = session.user.email === 'mongezisilent@gmail.com';
+        setIsAdmin(isAdminUser);
         setLoading(false);
       } catch (error) {
         console.error('Auth error:', error);
@@ -58,6 +60,10 @@ const ProtectedUserRoute = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        if (!session) {
+          setLoading(false);
+          return;
+        }
         setLoading(false);
       } catch (error) {
         console.error('Auth error:', error);
