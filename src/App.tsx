@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { EventProvider } from "@/contexts/EventContext";
+import { SessionContextProvider } from '@supabase/auth-helpers-react';
 import Index from "./pages/Index";
 import EventPortal from "./pages/EventPortal";
 import EventDetails from "./pages/EventDetails";
@@ -23,48 +24,34 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
 
     const checkAdmin = async () => {
       try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (userError) {
-          console.error('User error:', userError);
+        if (error || !session) {
+          console.error('Session error:', error);
           if (mounted) {
-            setLoading(false);
             setIsAdmin(false);
+            setLoading(false);
           }
           return;
         }
 
-        if (!user) {
-          if (mounted) {
-            setLoading(false);
-            setIsAdmin(false);
-          }
-          return;
+        if (mounted) {
+          setIsAdmin(session.user.email === 'mongezisilent@gmail.com');
+          setLoading(false);
         }
-
-        if (mounted && user.email === 'mongezisilent@gmail.com') {
-          setIsAdmin(true);
-        }
-        
-        setLoading(false);
       } catch (error) {
         console.error('Auth error:', error);
         if (mounted) {
-          setLoading(false);
           setIsAdmin(false);
+          setLoading(false);
         }
       }
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT') {
-        if (mounted) {
-          setIsAdmin(false);
-        }
-      } else if (session?.user) {
-        if (mounted) {
-          setIsAdmin(session.user.email === 'mongezisilent@gmail.com');
-        }
+      if (mounted) {
+        setIsAdmin(session?.user?.email === 'mongezisilent@gmail.com');
+        setLoading(false);
       }
     });
 
@@ -95,10 +82,10 @@ const ProtectedUserRoute = ({ children }: { children: React.ReactNode }) => {
 
     const checkAuth = async () => {
       try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (userError) {
-          console.error('User error:', userError);
+        if (error) {
+          console.error('Session error:', error);
           if (mounted) {
             setIsAuthenticated(false);
             setLoading(false);
@@ -107,7 +94,7 @@ const ProtectedUserRoute = ({ children }: { children: React.ReactNode }) => {
         }
 
         if (mounted) {
-          setIsAuthenticated(!!user);
+          setIsAuthenticated(!!session);
           setLoading(false);
         }
       } catch (error) {
@@ -146,45 +133,47 @@ const ProtectedUserRoute = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <EventProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route 
-              path="/admin/*" 
-              element={
-                <ProtectedAdminRoute>
-                  <Routes>
-                    <Route index element={<Index />} />
-                    <Route path="*" element={<Navigate to="/admin" replace />} />
-                  </Routes>
-                </ProtectedAdminRoute>
-              } 
-            />
-            <Route 
-              path="/" 
-              element={
-                <ProtectedUserRoute>
-                  <EventPortal />
-                </ProtectedUserRoute>
-              } 
-            />
-            <Route 
-              path="/event/:eventId" 
-              element={
-                <ProtectedUserRoute>
-                  <EventDetails />
-                </ProtectedUserRoute>
-              } 
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
-      </EventProvider>
-    </TooltipProvider>
+    <SessionContextProvider supabaseClient={supabase}>
+      <TooltipProvider>
+        <EventProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route 
+                path="/admin/*" 
+                element={
+                  <ProtectedAdminRoute>
+                    <Routes>
+                      <Route index element={<Index />} />
+                      <Route path="*" element={<Navigate to="/admin" replace />} />
+                    </Routes>
+                  </ProtectedAdminRoute>
+                } 
+              />
+              <Route 
+                path="/" 
+                element={
+                  <ProtectedUserRoute>
+                    <EventPortal />
+                  </ProtectedUserRoute>
+                } 
+              />
+              <Route 
+                path="/event/:eventId" 
+                element={
+                  <ProtectedUserRoute>
+                    <EventDetails />
+                  </ProtectedUserRoute>
+                } 
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </EventProvider>
+      </TooltipProvider>
+    </SessionContextProvider>
   </QueryClientProvider>
 );
 
