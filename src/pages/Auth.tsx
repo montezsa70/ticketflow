@@ -20,7 +20,25 @@ const AuthPage = () => {
           navigate("/");
         }
       }
+      if (event === "USER_DELETED" || event === "SIGNED_OUT") {
+        toast.error("Invalid login credentials. Please try again.");
+      }
     });
+
+    // Handle initial session
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const isAdmin = session.user?.email === 'mongezisilent@gmail.com';
+        if (isAdmin) {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
+      }
+    };
+    
+    checkSession();
 
     return () => {
       subscription.unsubscribe();
@@ -73,6 +91,9 @@ const AuthPage = () => {
             },
           }}
           providers={[]}
+          onError={(error) => {
+            toast.error(error.message || "An error occurred during authentication");
+          }}
         />
       </div>
     </div>
