@@ -3,16 +3,16 @@ import { toast } from "sonner";
 
 export const signOut = async () => {
   try {
+    // Clear any local storage items related to auth
+    localStorage.removeItem('supabase.auth.token');
+    
     // Perform the sign out
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     
-    // Clear any local storage items related to auth
-    localStorage.removeItem('supabase.auth.token');
-    
     toast.success("Successfully signed out");
     
-    // Redirect to auth page using window.location to ensure complete page refresh
+    // Force a page reload to ensure clean state
     window.location.href = '/auth';
   } catch (error) {
     console.error('Sign out error:', error);

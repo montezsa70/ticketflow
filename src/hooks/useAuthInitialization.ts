@@ -19,14 +19,19 @@ export const useAuthInitialization = () => {
         }
 
         // Set up auth state change listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
           if (!mounted) return;
+
+          console.log('Auth state changed:', event);
 
           switch (event) {
             case 'SIGNED_OUT':
               console.log('User signed out');
               localStorage.removeItem('supabase.auth.token');
-              // Clear any other auth-related state here
+              // Ensure we redirect to auth page on sign out
+              if (window.location.pathname !== '/auth') {
+                window.location.href = '/auth';
+              }
               break;
             case 'SIGNED_IN':
               console.log('User signed in');

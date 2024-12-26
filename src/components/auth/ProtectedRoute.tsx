@@ -20,7 +20,6 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
 
     const checkAuthorization = async () => {
       try {
-        // Get the current session
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         
         if (!currentSession) {
