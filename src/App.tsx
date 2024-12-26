@@ -60,14 +60,21 @@ const ProtectedUserRoute = ({ children }: { children: React.ReactNode }) => {
     const checkSession = async () => {
       try {
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        
-        setLoading(false);
-        
-        if (!currentSession) {
-          toast.error("Please sign in to continue");
+        if (error) {
+          console.error('Session check error:', error);
+          await supabase.auth.signOut();
+          setLoading(false);
           return;
         }
+        
+        if (!currentSession) {
+          await supabase.auth.signOut();
+          toast.error("Please sign in to continue");
+          setLoading(false);
+          return;
+        }
+
+        setLoading(false);
       } catch (error) {
         console.error('Session check error:', error);
         setLoading(false);
@@ -93,16 +100,32 @@ const App = () => {
     const initializeAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
+        
         if (error) {
           console.error('Session initialization error:', error);
           await supabase.auth.signOut();
+          setInitialized(true);
+          return;
         }
+
         if (!session) {
-          await supabase.auth.signOut(); // Clear any stale session data
+          await supabase.auth.signOut();
         }
+
+        // Subscribe to auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          if (event === 'SIGNED_OUT') {
+            await supabase.auth.signOut(); // Ensure complete signout
+          }
+        });
+
+        setInitialized(true);
+
+        return () => {
+          subscription.unsubscribe();
+        };
       } catch (error) {
         console.error('Auth initialization error:', error);
-      } finally {
         setInitialized(true);
       }
     };
