@@ -124,7 +124,7 @@ const ProtectedUserRoute = ({ children }: { children: React.ReactNode }) => {
       }
     });
 
-    checkAdmin();
+    checkAuth(); // Fixed: Changed from checkAdmin() to checkAuth()
 
     return () => {
       mounted = false;
