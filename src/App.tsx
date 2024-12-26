@@ -57,17 +57,29 @@ const ProtectedUserRoute = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!session?.user) {
-      setLoading(false);
-      return;
-    }
-    setLoading(false);
-  }, [session]);
+    const checkSession = async () => {
+      try {
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        
+        setLoading(false);
+        
+        if (!currentSession) {
+          toast.error("Please sign in to continue");
+          return;
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
+        setLoading(false);
+      }
+    };
+
+    checkSession();
+  }, []);
 
   if (loading) return null;
   
   if (!session?.user) {
-    toast.error("Please sign in to continue");
     return <Navigate to="/auth" replace />;
   }
 
@@ -79,11 +91,20 @@ const App = () => {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        await supabase.auth.signOut(); // Clear any stale session data
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Session initialization error:', error);
+          await supabase.auth.signOut();
+        }
+        if (!session) {
+          await supabase.auth.signOut(); // Clear any stale session data
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
+        setInitialized(true);
       }
-      setInitialized(true);
     };
 
     initializeAuth();
