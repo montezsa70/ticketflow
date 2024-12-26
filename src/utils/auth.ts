@@ -3,6 +3,9 @@ import { toast } from "sonner";
 
 export const signOut = async () => {
   try {
+    // Clear local storage first
+    localStorage.removeItem('supabase.auth.token');
+    
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Sign out error:', error);
@@ -10,12 +13,10 @@ export const signOut = async () => {
       throw error;
     }
     
-    // Clear any local storage or state if needed
-    localStorage.removeItem('supabase.auth.token');
     toast.success("Successfully signed out");
     
-    // Force reload to clear any remaining state
-    window.location.href = '/auth';
+    // Use replace to avoid history stack issues
+    window.location.replace('/auth');
   } catch (error) {
     console.error('Sign out error:', error);
     toast.error("Error signing out. Please try again.");

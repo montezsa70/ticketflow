@@ -11,6 +11,7 @@ export const useAuthInitialization = () => {
       try {
         // Get initial session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
         if (sessionError) {
           console.error('Session error:', sessionError);
           if (mounted) setInitialized(true);
@@ -18,14 +19,20 @@ export const useAuthInitialization = () => {
         }
 
         // Set up auth state change listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
           if (!mounted) return;
 
-          if (event === 'SIGNED_OUT') {
-            // Clear any auth-related state here
-            console.log('User signed out');
-          } else if (event === 'SIGNED_IN') {
-            console.log('User signed in');
+          switch (event) {
+            case 'SIGNED_OUT':
+              console.log('User signed out');
+              localStorage.removeItem('supabase.auth.token');
+              break;
+            case 'SIGNED_IN':
+              console.log('User signed in');
+              break;
+            case 'TOKEN_REFRESHED':
+              console.log('Token refreshed');
+              break;
           }
         });
 
