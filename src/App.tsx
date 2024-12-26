@@ -20,13 +20,47 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const checkAdmin = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.email === 'mongezisilent@gmail.com') {
-        setIsAdmin(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          setLoading(false);
+          return;
+        }
+
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) {
+          console.error('Error fetching user:', error);
+          toast.error("Authentication error");
+          setLoading(false);
+          return;
+        }
+
+        if (user?.email === 'mongezisilent@gmail.com') {
+          setIsAdmin(true);
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error('Auth error:', error);
+        setLoading(false);
       }
-      setLoading(false);
     };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setIsAdmin(false);
+      } else if (session) {
+        const { user } = session;
+        setIsAdmin(user?.email === 'mongezisilent@gmail.com');
+      }
+    });
+
     checkAdmin();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   if (loading) return null;
@@ -45,11 +79,32 @@ const ProtectedUserRoute = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
-      setLoading(false);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Session error:', error);
+          setIsAuthenticated(false);
+        } else {
+          setIsAuthenticated(!!session);
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error('Auth error:', error);
+        setIsAuthenticated(false);
+        setLoading(false);
+      }
     };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
     checkAuth();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   if (loading) return null;
