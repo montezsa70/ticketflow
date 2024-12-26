@@ -23,10 +23,10 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
 
     const checkAdmin = async () => {
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
         
-        if (sessionError) {
-          console.error('Session error:', sessionError);
+        if (userError) {
+          console.error('User error:', userError);
           if (mounted) {
             setLoading(false);
             setIsAdmin(false);
@@ -34,7 +34,7 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
           return;
         }
 
-        if (!session) {
+        if (!user) {
           if (mounted) {
             setLoading(false);
             setIsAdmin(false);
@@ -42,14 +42,16 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
           return;
         }
 
-        if (mounted && session.user?.email === 'mongezisilent@gmail.com') {
+        if (mounted && user.email === 'mongezisilent@gmail.com') {
           setIsAdmin(true);
         }
+        
+        setLoading(false);
       } catch (error) {
         console.error('Auth error:', error);
-      } finally {
         if (mounted) {
           setLoading(false);
+          setIsAdmin(false);
         }
       }
     };
@@ -93,26 +95,25 @@ const ProtectedUserRoute = ({ children }: { children: React.ReactNode }) => {
 
     const checkAuth = async () => {
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
         
-        if (sessionError) {
-          console.error('Session error:', sessionError);
+        if (userError) {
+          console.error('User error:', userError);
           if (mounted) {
             setIsAuthenticated(false);
+            setLoading(false);
           }
           return;
         }
 
         if (mounted) {
-          setIsAuthenticated(!!session);
+          setIsAuthenticated(!!user);
+          setLoading(false);
         }
       } catch (error) {
         console.error('Auth error:', error);
         if (mounted) {
           setIsAuthenticated(false);
-        }
-      } finally {
-        if (mounted) {
           setLoading(false);
         }
       }
@@ -121,10 +122,11 @@ const ProtectedUserRoute = ({ children }: { children: React.ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (mounted) {
         setIsAuthenticated(!!session);
+        setLoading(false);
       }
     });
 
-    checkAuth(); // Fixed: Changed from checkAdmin() to checkAuth()
+    checkAuth();
 
     return () => {
       mounted = false;
