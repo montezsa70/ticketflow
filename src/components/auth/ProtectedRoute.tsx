@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useSession } from '@supabase/auth-helpers-react';
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,13 +13,17 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
   const session = useSession();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let mounted = true;
 
     const checkAuthorization = async () => {
       try {
-        if (!session?.user?.email) {
+        // Get the current session
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        
+        if (!currentSession) {
           if (mounted) {
             setIsAuthorized(false);
             setLoading(false);
@@ -27,7 +32,7 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
         }
 
         if (requireAdmin) {
-          const isAdminUser = session.user.email === 'mongezisilent@gmail.com';
+          const isAdminUser = currentSession.user.email === 'mongezisilent@gmail.com';
           if (mounted) setIsAuthorized(isAdminUser);
         } else {
           if (mounted) setIsAuthorized(true);
@@ -43,19 +48,32 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
       }
     };
 
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
+      if (event === 'SIGNED_OUT') {
+        if (mounted) {
+          setIsAuthorized(false);
+          navigate('/auth');
+        }
+      } else {
+        checkAuthorization();
+      }
+    });
+
     checkAuthorization();
 
     return () => {
       mounted = false;
+      subscription.unsubscribe();
     };
-  }, [session, requireAdmin]);
+  }, [session, requireAdmin, navigate]);
 
   if (loading) return null;
 
   if (!isAuthorized) {
     const message = requireAdmin ? "Access denied. Admin only area." : "Please sign in to continue";
     toast.error(message);
-    return <Navigate to={requireAdmin ? "/" : "/auth"} replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   return <>{children}</>;

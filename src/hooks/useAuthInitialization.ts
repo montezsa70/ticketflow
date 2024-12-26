@@ -26,6 +26,7 @@ export const useAuthInitialization = () => {
             case 'SIGNED_OUT':
               console.log('User signed out');
               localStorage.removeItem('supabase.auth.token');
+              // Clear any other auth-related state here
               break;
             case 'SIGNED_IN':
               console.log('User signed in');
