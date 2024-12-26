@@ -23,13 +23,12 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkAdmin = async () => {
       try {
-        if (!session) {
+        if (!session?.user?.email) {
           setIsAdmin(false);
           setLoading(false);
           return;
         }
 
-        // Check if user is admin
         const isAdminUser = session.user.email === 'mongezisilent@gmail.com';
         setIsAdmin(isAdminUser);
         setLoading(false);
@@ -58,25 +57,16 @@ const ProtectedUserRoute = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        if (!session) {
-          setLoading(false);
-          return;
-        }
-        setLoading(false);
-      } catch (error) {
-        console.error('Auth error:', error);
-        setLoading(false);
-      }
-    };
-
-    checkAuth();
+    if (!session?.user) {
+      setLoading(false);
+      return;
+    }
+    setLoading(false);
   }, [session]);
 
   if (loading) return null;
   
-  if (!session) {
+  if (!session?.user) {
     toast.error("Please sign in to continue");
     return <Navigate to="/auth" replace />;
   }
@@ -84,50 +74,68 @@ const ProtectedUserRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <SessionContextProvider supabaseClient={supabase}>
-      <TooltipProvider>
-        <EventProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route 
-                path="/admin/*" 
-                element={
-                  <ProtectedAdminRoute>
-                    <Routes>
-                      <Route index element={<Index />} />
-                      <Route path="*" element={<Navigate to="/admin" replace />} />
-                    </Routes>
-                  </ProtectedAdminRoute>
-                } 
-              />
-              <Route 
-                path="/" 
-                element={
-                  <ProtectedUserRoute>
-                    <EventPortal />
-                  </ProtectedUserRoute>
-                } 
-              />
-              <Route 
-                path="/event/:eventId" 
-                element={
-                  <ProtectedUserRoute>
-                    <EventDetails />
-                  </ProtectedUserRoute>
-                } 
-              />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </EventProvider>
-      </TooltipProvider>
-    </SessionContextProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        await supabase.auth.signOut(); // Clear any stale session data
+      }
+      setInitialized(true);
+    };
+
+    initializeAuth();
+  }, []);
+
+  if (!initialized) return null;
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SessionContextProvider supabaseClient={supabase}>
+        <TooltipProvider>
+          <EventProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route 
+                  path="/admin/*" 
+                  element={
+                    <ProtectedAdminRoute>
+                      <Routes>
+                        <Route index element={<Index />} />
+                        <Route path="*" element={<Navigate to="/admin" replace />} />
+                      </Routes>
+                    </ProtectedAdminRoute>
+                  } 
+                />
+                <Route 
+                  path="/" 
+                  element={
+                    <ProtectedUserRoute>
+                      <EventPortal />
+                    </ProtectedUserRoute>
+                  } 
+                />
+                <Route 
+                  path="/event/:eventId" 
+                  element={
+                    <ProtectedUserRoute>
+                      <EventDetails />
+                    </ProtectedUserRoute>
+                  } 
+                />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </BrowserRouter>
+          </EventProvider>
+        </TooltipProvider>
+      </SessionContextProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
