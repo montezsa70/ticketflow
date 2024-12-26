@@ -60,12 +60,7 @@ const ProtectedUserRoute = ({ children }: { children: React.ReactNode }) => {
     const checkSession = async () => {
       try {
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error('Session check error:', error);
-          await supabase.auth.signOut();
-          setLoading(false);
-          return;
-        }
+        if (error) throw error;
         
         if (!currentSession) {
           await supabase.auth.signOut();
@@ -77,15 +72,13 @@ const ProtectedUserRoute = ({ children }: { children: React.ReactNode }) => {
         // Verify session persistence
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (userError || !user) {
-          console.error('User verification error:', userError);
-          await supabase.auth.signOut();
-          setLoading(false);
-          return;
+          throw userError || new Error('User not found');
         }
 
         setLoading(false);
       } catch (error) {
         console.error('Session check error:', error);
+        await supabase.auth.signOut();
         setLoading(false);
       }
     };
@@ -108,21 +101,22 @@ const App = () => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Clear any existing session first
-        await supabase.auth.signOut();
+        // Clear any stale sessions first
+        const { error: signOutError } = await supabase.auth.signOut();
+        if (signOutError) throw signOutError;
         
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Session initialization error:', error);
-          setInitialized(true);
-          return;
-        }
+        // Check current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
 
         // Subscribe to auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
           if (event === 'SIGNED_OUT') {
-            await supabase.auth.signOut();
+            try {
+              await supabase.auth.signOut();
+            } catch (error) {
+              console.error('Signout error:', error);
+            }
           }
         });
 
@@ -133,6 +127,7 @@ const App = () => {
         };
       } catch (error) {
         console.error('Auth initialization error:', error);
+        // Ensure we still set initialized even if there's an error
         setInitialized(true);
       }
     };
