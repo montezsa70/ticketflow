@@ -3,12 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { AuthError, AuthChangeEvent } from '@supabase/supabase-js';
 
 const AuthPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session) => {
       if (event === "SIGNED_IN") {
         const isAdmin = session?.user?.email === 'mongezisilent@gmail.com';
         toast.success("Successfully signed in!");
@@ -20,7 +21,7 @@ const AuthPage = () => {
           navigate("/");
         }
       }
-      if (event === "USER_DELETED" || event === "SIGNED_OUT") {
+      if (event === "SIGNED_OUT") {
         toast.error("Invalid login credentials. Please try again.");
       }
     });
@@ -91,9 +92,6 @@ const AuthPage = () => {
             },
           }}
           providers={[]}
-          onError={(error) => {
-            toast.error(error.message || "An error occurred during authentication");
-          }}
         />
       </div>
     </div>
