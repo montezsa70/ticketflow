@@ -22,13 +22,14 @@ export const useAuthInitialization = () => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
           if (!mounted) return;
 
-          console.log('Auth state changed:', event);
+          console.log('Auth state changed:', event, 'Session:', session ? 'exists' : 'null');
 
           switch (event) {
             case 'SIGNED_OUT':
               console.log('User signed out');
-              localStorage.removeItem('supabase.auth.token');
-              // Ensure we redirect to auth page on sign out
+              // Clear all storage on sign out
+              localStorage.clear();
+              // Only redirect if not already on auth page
               if (window.location.pathname !== '/auth') {
                 window.location.href = '/auth';
               }
@@ -38,6 +39,9 @@ export const useAuthInitialization = () => {
               break;
             case 'TOKEN_REFRESHED':
               console.log('Token refreshed');
+              break;
+            case 'USER_UPDATED':
+              console.log('User updated');
               break;
           }
         });

@@ -52,6 +52,7 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
       if (event === 'SIGNED_OUT') {
         if (mounted) {
           setIsAuthorized(false);
+          setLoading(false);
           navigate('/auth');
         }
       } else {
