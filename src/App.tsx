@@ -74,6 +74,15 @@ const ProtectedUserRoute = ({ children }: { children: React.ReactNode }) => {
           return;
         }
 
+        // Verify session persistence
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+          console.error('User verification error:', userError);
+          await supabase.auth.signOut();
+          setLoading(false);
+          return;
+        }
+
         setLoading(false);
       } catch (error) {
         console.error('Session check error:', error);
@@ -99,23 +108,21 @@ const App = () => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        // Clear any existing session first
+        await supabase.auth.signOut();
+        
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Session initialization error:', error);
-          await supabase.auth.signOut();
           setInitialized(true);
           return;
-        }
-
-        if (!session) {
-          await supabase.auth.signOut();
         }
 
         // Subscribe to auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
           if (event === 'SIGNED_OUT') {
-            await supabase.auth.signOut(); // Ensure complete signout
+            await supabase.auth.signOut();
           }
         });
 
