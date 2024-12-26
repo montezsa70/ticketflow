@@ -8,6 +8,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
 } from "@/components/ui/sidebar"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
@@ -56,7 +57,7 @@ export function AdminSidebar({ activeView, setActiveView }: AdminSidebarProps) {
   ]
 
   return (
-    <Sidebar>
+    <Sidebar variant="floating" collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Admin Portal</SidebarGroupLabel>
@@ -67,6 +68,8 @@ export function AdminSidebar({ activeView, setActiveView }: AdminSidebarProps) {
                   <SidebarMenuButton
                     onClick={() => setActiveView(item.view)}
                     data-active={activeView === item.view}
+                    className="transition-all duration-200 hover:scale-105"
+                    tooltip={item.title}
                   >
                     <item.icon className="h-4 w-4" />
                     <span>{item.title}</span>
@@ -76,7 +79,8 @@ export function AdminSidebar({ activeView, setActiveView }: AdminSidebarProps) {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={handleSignOut}
-                  className="text-destructive hover:text-destructive"
+                  className="text-destructive hover:text-destructive transition-all duration-200 hover:scale-105"
+                  tooltip="Sign Out"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>Sign Out</span>
@@ -86,6 +90,7 @@ export function AdminSidebar({ activeView, setActiveView }: AdminSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarRail />
     </Sidebar>
   )
 }
