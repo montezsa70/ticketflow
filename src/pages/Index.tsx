@@ -6,9 +6,19 @@ import { Analytics } from "@/components/analytics/Analytics";
 import { AttendeeManagement } from "@/components/attendee/AttendeeManagement";
 import { CustomizationSettings } from "@/components/settings/CustomizationSettings";
 import { EventProvider } from "@/contexts/EventContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Index = () => {
   const [activeView, setActiveView] = useState("dashboard");
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success("Successfully signed out!");
+    navigate('/auth');
+  };
 
   const renderContent = () => {
     switch (activeView) {
@@ -31,7 +41,7 @@ const Index = () => {
         <header className="max-w-7xl mx-auto mb-8">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
-              TicketFlow
+              TicketFlow Admin
             </h1>
             <div className="space-x-4">
               <Button
@@ -57,6 +67,12 @@ const Index = () => {
                 className="bg-purple-gradient hover:opacity-90 transition-opacity"
               >
                 {activeView === "settings" ? "View Dashboard" : "Customization"}
+              </Button>
+              <Button
+                onClick={handleSignOut}
+                variant="destructive"
+              >
+                Sign Out
               </Button>
             </div>
           </div>
