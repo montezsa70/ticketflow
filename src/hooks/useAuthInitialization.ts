@@ -15,7 +15,6 @@ export const useAuthInitialization = () => {
         
         if (sessionError) {
           console.error('Session error:', sessionError);
-          // Clear any stale session data
           await supabase.auth.signOut();
           localStorage.clear();
           if (mounted) setInitialized(true);
@@ -32,12 +31,21 @@ export const useAuthInitialization = () => {
             case 'SIGNED_OUT':
               console.log('User signed out');
               localStorage.clear();
+              // Use window.location.pathname to check current route
               if (window.location.pathname !== '/auth') {
+                // Use relative path instead of full URL
                 window.location.href = '/auth';
               }
               break;
             case 'SIGNED_IN':
               console.log('User signed in');
+              // Handle successful sign in
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user?.email === 'mongezisilent@gmail.com') {
+                window.location.href = '/admin';
+              } else {
+                window.location.href = '/';
+              }
               break;
             case 'TOKEN_REFRESHED':
               console.log('Token refreshed');
@@ -46,7 +54,6 @@ export const useAuthInitialization = () => {
               console.log('User updated');
               break;
             case 'INITIAL_SESSION':
-              // Handle initial session load
               if (!session) {
                 localStorage.clear();
                 if (window.location.pathname !== '/auth') {
@@ -75,10 +82,11 @@ export const useAuthInitialization = () => {
         };
       } catch (error) {
         console.error('Auth initialization error:', error);
-        // Clear any stale session data on error
         await supabase.auth.signOut();
         localStorage.clear();
         if (mounted) setInitialized(true);
+        // Use relative path for error redirect
+        window.location.href = '/auth';
       }
     };
 
