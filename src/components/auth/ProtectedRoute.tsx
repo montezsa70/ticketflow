@@ -32,8 +32,15 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
 
         if (requireAdmin) {
           const isAdminUser = currentSession.user.email === 'mongezisilent@gmail.com';
-          if (mounted) setIsAuthorized(isAdminUser);
+          if (!isAdminUser) {
+            toast.error("Access denied. Admin only area.");
+            navigate('/');
+            if (mounted) setIsAuthorized(false);
+          } else {
+            if (mounted) setIsAuthorized(true);
+          }
         } else {
+          // For non-admin routes, any authenticated user is authorized
           if (mounted) setIsAuthorized(true);
         }
 
@@ -71,9 +78,11 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
   if (loading) return null;
 
   if (!isAuthorized) {
-    const message = requireAdmin ? "Access denied. Admin only area." : "Please sign in to continue";
-    toast.error(message);
-    return <Navigate to="/auth" replace />;
+    if (!session) {
+      toast.error("Please sign in to continue");
+      return <Navigate to="/auth" replace />;
+    }
+    return null;
   }
 
   return <>{children}</>;

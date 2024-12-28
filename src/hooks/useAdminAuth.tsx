@@ -16,25 +16,23 @@ export const useAdminAuth = () => {
         if (sessionError) throw sessionError;
         
         if (!session) {
-          toast.error("Please sign in to access this page");
-          navigate('/auth');
+          setIsAdmin(false);
+          setIsLoading(false);
           return;
         }
 
         const { data: userData } = await supabase.auth.getUser();
         const isAdminUser = userData.user?.email === 'mongezisilent@gmail.com';
+        setIsAdmin(isAdminUser);
         
-        if (!isAdminUser) {
+        // Only redirect if trying to access admin routes without admin privileges
+        if (!isAdminUser && window.location.pathname.startsWith('/admin')) {
           toast.error("Only admin users can access this page");
           navigate('/');
-          return;
         }
-
-        setIsAdmin(true);
       } catch (error) {
         console.error('Auth error:', error);
-        toast.error("Authentication error");
-        navigate('/auth');
+        setIsAdmin(false);
       } finally {
         setIsLoading(false);
       }
