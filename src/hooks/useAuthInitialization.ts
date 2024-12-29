@@ -31,20 +31,17 @@ export const useAuthInitialization = () => {
             case 'SIGNED_OUT':
               console.log('User signed out');
               localStorage.clear();
-              // Use window.location.pathname to check current route
               if (window.location.pathname !== '/auth') {
-                // Use relative path instead of full URL
-                window.location.href = '/auth';
+                window.location.replace('/auth');
               }
               break;
             case 'SIGNED_IN':
               console.log('User signed in');
-              // Handle successful sign in
               const { data: { user } } = await supabase.auth.getUser();
               if (user?.email === 'mongezisilent@gmail.com') {
-                window.location.href = '/admin';
+                window.location.replace('/admin');
               } else {
-                window.location.href = '/';
+                window.location.replace('/');
               }
               break;
             case 'TOKEN_REFRESHED':
@@ -57,7 +54,7 @@ export const useAuthInitialization = () => {
               if (!session) {
                 localStorage.clear();
                 if (window.location.pathname !== '/auth') {
-                  window.location.href = '/auth';
+                  window.location.replace('/auth');
                 }
               }
               break;
@@ -70,7 +67,7 @@ export const useAuthInitialization = () => {
             console.log('Token refresh failed, signing out');
             localStorage.clear();
             if (window.location.pathname !== '/auth') {
-              window.location.href = '/auth';
+              window.location.replace('/auth');
             }
           }
         });
@@ -85,8 +82,7 @@ export const useAuthInitialization = () => {
         await supabase.auth.signOut();
         localStorage.clear();
         if (mounted) setInitialized(true);
-        // Use relative path for error redirect
-        window.location.href = '/auth';
+        window.location.replace('/auth');
       }
     };
 
